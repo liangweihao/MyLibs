@@ -4,7 +4,9 @@ import android.content.res.Resources
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.MainThread
 import androidx.collection.ArraySet
+import androidx.core.util.Pools
 import androidx.core.util.forEach
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
@@ -31,14 +33,29 @@ import kotlin.reflect.KClass
  *--------------------
  */
 open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
-    constructor(diffCallback:DiffUtil.ItemCallback<T>):super(diffCallback) {
 
+    private var outDataObserver:OutAdapterDataObserver = OutAdapterDataObserver()
+
+
+    constructor(diffCallback:DiffUtil.ItemCallback<T>):super(diffCallback) {
     }
 
 
     constructor(config:AsyncDifferConfig<T>):super(config) {
+    }
+
+
+    override fun onAttachedToRecyclerView(recyclerView:RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        registerAdapterDataObserver(outDataObserver)
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView:RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        unregisterAdapterDataObserver(outDataObserver)
 
     }
+
 
     override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):ViewHolderInner {
         val layoutID = getLayoutID(viewType)
@@ -74,12 +91,31 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
         return currentList[index] as T
     }
 
+    private fun getArrayListCache():MutableList<T> {
+        return ArrayList()
+    }
+
+    @MainThread fun removeListItem(index:Int, result:Runnable? = null) {
+        val arrayListCache = getArrayListCache()
+        currentList.forEach {
+            arrayListCache.add(it)
+        }
+        arrayListCache.removeAt(index)
+        submitList(arrayListCache) {
+            result?.run()
+        }
+    }
+
+    override fun onCurrentListChanged(previousList:MutableList<T>, currentList:MutableList<T>) {
+        super.onCurrentListChanged(previousList, currentList)
+
+    }
 
     override fun onBindViewHolder(holder:ViewHolderInner, position:Int) {
         val itemViewType = getItemViewType(position)
         hashMap.forEach {
             if (it.key.hashCode() == itemViewType) {
-                it.value.binderInfo.onBind(holder, position)
+                it.value.binderInfo.onBind(holder)
                 return@forEach
             }
         }
@@ -106,24 +142,32 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
 
 
     fun updateOutData(position:Int, key:String, value:Any) {
-        val itemElement = getItemElement<Any>(position)
-        if (outDataMap[getHashIndex(position,itemElement)] == null){
-            outDataMap.put(getHashIndex(position,itemElement),HashMap())
+        if (position == RecyclerView.NO_POSITION) {
+            return
         }
-        outDataMap[getHashIndex(position,itemElement)]?.put(key, value)
+        val itemElement = getItemElement<Any>(position)
+        if (outDataMap[getHashIndex(position, itemElement)] == null) {
+            outDataMap.put(getHashIndex(position, itemElement), HashMap())
+        }
+        outDataMap[getHashIndex(position, itemElement)]?.put(key, value)
     }
 
-    private fun getHashIndex(position:Int,value:Any):Int {
+    private fun getHashIndex(position:Int, value:Any):Int {
         var result = position.hashCode()
         result = 31 * result + value.hashCode()
         return result
     }
 
-    fun <T> getOutData(position:Int, key:String, defaultValue:T):T {
+    fun <T> getOutData(position:Int, key:String, defaultValue:T, isUpdateDefaultValue:Boolean):T {
+        if (position == RecyclerView.NO_POSITION) {
+            return defaultValue
+        }
         val itemElement = getItemElement<Any>(position)
-        val get = outDataMap[getHashIndex(position,itemElement)]?.get(key)
-        if (get == null) {
+        val get = outDataMap[getHashIndex(position, itemElement)]?.get(key)
+        if (get == null && isUpdateDefaultValue) {
             updateOutData(position, key, defaultValue!!)
+            return defaultValue
+        } else if (get == null) {
             return defaultValue
         }
         return get as T
@@ -133,52 +177,54 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
 
         override fun onChanged() {
             super.onChanged()
-            updateOutDataMap(0,currentList.size)
+            updateOutDataMap(0, currentList.size)
         }
 
 
-        private fun updateOutDataMap(start:Int,count:Int){
+        private fun updateOutDataMap(start:Int, count:Int) {
             val sameList = ArraySet<Int>()
-            val removeList = ArraySet<Int>()
-            // N
-            for (index in start..count){
+            val removeList = ArraySet<Int>() // N
+            for (index in start until count) {
                 sameList.add(currentList[index].hashCode())
-            }
-            //0-N
+            } //0-N
             outDataMap.forEach { key, value ->
                 val add = sameList.add(key)
-                if (add){
-                     // 说明数据多余
+                if (add) { // 说明数据多余
                     removeList.add(key)
                 }
-            }
-            //0 - N
+            } //0 - N
             // 剩下的就是有效的数据
             removeList.forEach {
                 outDataMap.remove(it)
             }
         }
-        private fun removeOutDataMap(start:Int,count:Int){
-            val sameList = ArraySet<Int>()
-             // N
-            for (index in start..count){
-                sameList.add(currentList[index].hashCode())
+
+        private fun removeOutDataMap(start:Int, count:Int) {
+
+            val sameList = ArraySet<Int>() // N
+            val removeList = ArrayList<Int>()
+            currentList.forEachIndexed { index, t ->
+                sameList.add(getHashIndex(index, t as Any))
+            } // 剩下的就是有效的数据
+            outDataMap.forEach { key, value ->
+                val add = sameList.add(key) // true 代表 没有这个数据
+                if (add) {
+                    removeList.add(key)
+                }
             }
-            //0 - N
-            // 剩下的就是有效的数据
-            sameList.forEach {
+            removeList.forEach {
                 outDataMap.remove(it)
             }
         }
 
         override fun onItemRangeChanged(positionStart:Int, itemCount:Int) {
             super.onItemRangeChanged(positionStart, itemCount)
-            updateOutDataMap(positionStart,itemCount)
+            updateOutDataMap(positionStart, itemCount)
         }
 
         override fun onItemRangeChanged(positionStart:Int, itemCount:Int, payload:Any?) {
             super.onItemRangeChanged(positionStart, itemCount, payload)
-            updateOutDataMap(positionStart,itemCount)
+            updateOutDataMap(positionStart, itemCount)
         }
 
         override fun onItemRangeInserted(positionStart:Int, itemCount:Int) {
@@ -187,13 +233,13 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
 
         override fun onItemRangeRemoved(positionStart:Int, itemCount:Int) {
             super.onItemRangeRemoved(positionStart, itemCount)
-            removeOutDataMap(positionStart,itemCount)
+            removeOutDataMap(positionStart, itemCount)
         }
 
 
         override fun onItemRangeMoved(fromPosition:Int, toPosition:Int, itemCount:Int) {
             super.onItemRangeMoved(fromPosition, toPosition, itemCount)
-            removeOutDataMap(fromPosition,itemCount)
+            removeOutDataMap(fromPosition, itemCount)
         }
     }
 
@@ -201,10 +247,16 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
     var outDataMap = SparseArray<HashMap<String, Any>>()
 
     public abstract class BinderInfo<T> {
-        abstract fun onBind(holder:ViewHolderInner, position:Int)
+        // TODO:LWH  2022/5/16  这里把position去掉了 原因是 如果数据发生变化了 那么这个position其实是不准确的
+        abstract fun onBind(holder:ViewHolderInner)
     }
 }
 
+/**
+ *  getAdapterPosition 这个是holder 当前的位置 假设数据没有了试图还在那么就会出现越界的问题
+ *
+ * 推荐使用这个： getLayoutPosition  布局重新绘制之前的位置， 至少这个能够保证当前的数据和试图的位置是相对应的
+ * */
 class ViewHolderInner(itemView:View):RecyclerView.ViewHolder(itemView) {
 
     private var binding:ViewDataBinding? = null
@@ -231,5 +283,6 @@ class ViewHolderInner(itemView:View):RecyclerView.ViewHolder(itemView) {
     fun unBindDataBinding() {
         binding?.unbind()
     }
+
 
 }
