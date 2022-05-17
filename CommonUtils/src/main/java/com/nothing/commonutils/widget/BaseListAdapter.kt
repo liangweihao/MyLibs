@@ -1,12 +1,11 @@
 package com.nothing.commonutils.widget
 
 import android.content.res.Resources
-import android.util.SparseArray
+ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MainThread
 import androidx.collection.ArraySet
-import androidx.core.util.Pools
 import androidx.core.util.forEach
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
@@ -15,6 +14,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nothing.commonutils.inflate
+import com.nothing.commonutils.utils.d
 import kotlin.reflect.KClass
 
 /**
@@ -32,18 +32,64 @@ import kotlin.reflect.KClass
  *<p>Attention:
  *--------------------
  */
-open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
+
+val TAG = "BaseListAdapter"
+class BaseDiffItemCallback:DiffUtil.ItemCallback<Any>() {
+
+    private var ad:BaseListAdapter? = null
+    fun registerAdapter(adapter:BaseListAdapter) {
+        ad = adapter
+    }
+
+    override fun areItemsTheSame(oldItem:Any, newItem:Any):Boolean {
+        return ad!!.areItemsTheSame(oldItem, newItem)
+    }
+
+    override fun areContentsTheSame(oldItem:Any, newItem:Any):Boolean {
+        return ad!!.areContentsTheSame(oldItem, newItem)
+    }
+}
+
+
+open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
 
     private var outDataObserver:OutAdapterDataObserver = OutAdapterDataObserver()
 
 
-    constructor(diffCallback:DiffUtil.ItemCallback<T>):super(diffCallback) {
+    constructor(callback:BaseDiffItemCallback = BaseDiffItemCallback()):super(callback) {
+        callback.registerAdapter(this)
     }
 
+    fun areItemsTheSame(oldItem:Any, newItem:Any):Boolean {
+        var oldHashCode = 0
+        var newHashCode = 0
+        var binderInfo:BaseListAdapter.BinderInfo<Any>? = null
+        hashMap.forEach {
+            val old = it.key.isInstance(oldItem)
+            if (old){
+                oldHashCode = it.key.hashCode()
+                binderInfo =  it.value.binderInfo
+            }
 
-    constructor(config:AsyncDifferConfig<T>):super(config) {
+            val new = it.key.isInstance(newItem)
+            if (new){
+                newHashCode = it.key.hashCode()
+                binderInfo =  it.value.binderInfo
+            }
+        }
+
+        if (oldHashCode != newHashCode){
+            return false
+        }
+
+        return binderInfo?.compare(oldItem,newItem)?:false
     }
 
+    fun areContentsTheSame(oldItem:Any, newItem:Any):Boolean {
+        return true
+    }
+
+    private constructor(config:AsyncDifferConfig<Any>):super(config)
 
     override fun onAttachedToRecyclerView(recyclerView:RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -62,7 +108,7 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
         var child:View? = null
         if (layoutID > 0) {
             child = parent.inflate(layoutID)
-            return ViewHolderInner(child!!) as ViewHolderInner
+            return ViewHolderInner(child)
         }
         throw Resources.NotFoundException("view type not found :$viewType") //        return null
     }
@@ -91,7 +137,7 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
         return currentList[index] as T
     }
 
-    private fun getArrayListCache():MutableList<T> {
+    private fun getArrayListCache():MutableList<Any> {
         return ArrayList()
     }
 
@@ -106,7 +152,7 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
         }
     }
 
-    override fun onCurrentListChanged(previousList:MutableList<T>, currentList:MutableList<T>) {
+    override fun onCurrentListChanged(previousList:MutableList<Any>, currentList:MutableList<Any>) {
         super.onCurrentListChanged(previousList, currentList)
 
     }
@@ -132,12 +178,12 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
     }
 
 
-    var hashMap = HashMap<KClass<*>, ViewInfo>()
+    var hashMap = HashMap<KClass<*>, ViewInfo<Any>>()
 
-    data class ViewInfo(val layoutID:Int = 0, var binderInfo:BinderInfo<*>)
+    data class ViewInfo<T>(val layoutID:Int = 0, var binderInfo:BinderInfo<T>)
 
-    fun register(modelClass:KClass<*>, layoutID:Int, info:BinderInfo<*>) {
-        hashMap[modelClass] = ViewInfo(layoutID = layoutID, binderInfo = info)
+    fun <T> register(modelClass:KClass<*>, layoutID:Int, info:BinderInfo<T>) {
+        hashMap[modelClass] = ViewInfo<Any>(layoutID = layoutID, binderInfo = info as BinderInfo<Any>)
     }
 
 
@@ -249,6 +295,11 @@ open class BaseListAdapter<T>:ListAdapter<T, ViewHolderInner> {
     public abstract class BinderInfo<T> {
         // TODO:LWH  2022/5/16  这里把position去掉了 原因是 如果数据发生变化了 那么这个position其实是不准确的
         abstract fun onBind(holder:ViewHolderInner)
+
+        open fun compare(old:T, now:T):Boolean{
+
+            return false
+        }
     }
 }
 
