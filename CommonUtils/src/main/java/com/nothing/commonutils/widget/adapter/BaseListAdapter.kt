@@ -1,4 +1,4 @@
-package com.nothing.commonutils.widget
+package com.nothing.commonutils.widget.adapter
 
 import android.content.res.Resources
  import android.util.SparseArray
@@ -8,12 +8,17 @@ import androidx.annotation.MainThread
 import androidx.collection.ArraySet
 import androidx.core.util.forEach
 import androidx.databinding.DataBindingUtil
+import androidx.databinding.ObservableList
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nothing.commonutils.inflate
+import com.nothing.commonutils.utils.AutoListChangedListUnbind
+import com.nothing.commonutils.utils.ListChangedListener
+import com.nothing.commonutils.utils.ListDiffChangedListener
 import com.nothing.commonutils.utils.d
 import kotlin.reflect.KClass
 
@@ -48,6 +53,17 @@ class BaseDiffItemCallback:DiffUtil.ItemCallback<Any>() {
     override fun areContentsTheSame(oldItem:Any, newItem:Any):Boolean {
         return ad!!.areContentsTheSame(oldItem, newItem)
     }
+}
+
+fun RecyclerView.createAutoUnbindListChangedAdapter(lifecycle:Lifecycle, list:ObservableList<*>):BaseListAdapter {
+    val autoListChangedListUnbind = AutoListChangedListUnbind(list)
+    lifecycle.addObserver(autoListChangedListUnbind)
+    val multiTypeAdapter = BaseListAdapter()
+    autoListChangedListUnbind.addListChangeCallback(ListDiffChangedListener(multiTypeAdapter))
+    this.adapter = multiTypeAdapter
+    multiTypeAdapter.submitList(ArrayList(list))
+
+    return multiTypeAdapter
 }
 
 
@@ -101,6 +117,7 @@ open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
         unregisterAdapterDataObserver(outDataObserver)
 
     }
+
 
 
     override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):ViewHolderInner {
