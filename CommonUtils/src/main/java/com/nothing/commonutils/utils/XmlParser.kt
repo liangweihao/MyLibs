@@ -23,10 +23,11 @@ import java.nio.charset.StandardCharsets
  *--------------------
  */
 
-fun readXmlFromFile(xmlFile:File):HashMap<String,Any> {
+data class XmlValue(var value:Any,var valueType:String)
+fun readXmlFromFile(xmlFile:File):HashMap<String,XmlValue> {
     val newPullParser = XmlPullParserFactory.newInstance().newPullParser()
     newPullParser.setInput(FileInputStream(xmlFile), StandardCharsets.UTF_8.name())
-    return readValueXml(newPullParser, arrayOf("")) as HashMap<String, Any>
+    return readValueXml(newPullParser, arrayOf("")) as HashMap<String, XmlValue>
 }
 
 
@@ -71,7 +72,7 @@ interface ReadMapCallback {
                 if (parser.getName().equals("string")) {
                     name[0] =
                         valueName //System.out.println("Returning value for " + valueName + ": " + value);
-                    return value.toString()
+                    return XmlValue(value.toString(),"string")
                 }
                 throw XmlPullParserException("Unexpected end tag in <string>: " + parser.getName())
             } else if (eventType == XmlPullParser.TEXT) {
@@ -83,31 +84,33 @@ interface ReadMapCallback {
         throw XmlPullParserException("Unexpected end of document in <string>")
     } else if (readThisPrimitiveValueXml(parser, tagName).also {
             res = it ?: ""
+            name[0] = tagName //System.out.println("Returning value for " + valueName + ": " + res);
+
         } != null) { // all work already done by readThisPrimitiveValueXml
     } else if (tagName == "byte-array") {
         res = readThisByteArrayXml(parser, "byte-array")
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return  XmlValue(res,tagName)
     } else if (tagName == "int-array") {
         res = readThisIntArrayXml(parser, "int-array", name)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (tagName == "long-array") {
         res = readThisLongArrayXml(parser, "long-array", name)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (tagName == "double-array") {
         res = readThisDoubleArrayXml(parser, "double-array", name)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (tagName == "string-array") {
         res = readThisStringArrayXml(parser, "string-array", name)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (tagName == "boolean-array") {
         res = readThisBooleanArrayXml(parser, "boolean-array", name)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (tagName == "map") {
         parser.next()
         res =
@@ -118,16 +121,16 @@ interface ReadMapCallback {
         parser.next()
         res = readThisListXml(parser, "list", name, callback, arrayMap)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (tagName == "set") {
         parser.next()
         res = readThisSetXml(parser, "set", name, callback, arrayMap)
         name[0] = valueName //System.out.println("Returning value for " + valueName + ": " + res);
-        return res
+        return XmlValue(res,tagName)
     } else if (callback != null) {
         res = callback.readThisUnknownObjectXml(parser, tagName)
         name[0] = valueName
-        return res
+        return XmlValue(res,tagName)
     } else {
         throw XmlPullParserException("Unknown tag: $tagName")
     }

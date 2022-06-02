@@ -1,16 +1,19 @@
 package com.nothing.commonutils.services
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.FileObserver
 import androidx.annotation.ColorLong
 import androidx.lifecycle.MutableLiveData
-import com.nothing.commonutils.utils.d
-import com.nothing.commonutils.utils.getFiles
-import com.nothing.commonutils.utils.getPreferencesDir
+import com.nothing.commonutils.utils.*
+import io.reactivex.Observable
+import io.reactivex.Scheduler
+import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  *--------------------
@@ -46,6 +49,9 @@ class SharePreferenceService {
     }
 
 
+    /**
+     * 清理所有扫描道德文件
+     * */
     fun clearSharePreference() {
         shareFileResult.value?.forEach {
             if (it.exists()) {
