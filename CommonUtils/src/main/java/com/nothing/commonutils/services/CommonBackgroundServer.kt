@@ -30,7 +30,7 @@ import java.io.FileDescriptor
  */
 class CommonBackgroundServer:Service() {
     private val TAG = "CommonBackgroundServer"
-    private val sharePreferenceService = SharePreferenceService()
+    private var sharePreferenceService: SharePreferenceService? = null
 
     private var binder = CommonBackgroundBinder()
     override fun onBind(intent:Intent?):CommonBackgroundBinder {
@@ -44,6 +44,8 @@ class CommonBackgroundServer:Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        sharePreferenceService?.unListener()
+        sharePreferenceService = null
 
     }
 
@@ -53,8 +55,9 @@ class CommonBackgroundServer:Service() {
 
     override fun onCreate() {
         d("$TAG onCreate")
-        sharePreferenceService.scanXml(baseContext!!)
-        sharePreferenceService.listener(baseContext!!)
+        sharePreferenceService = SharePreferenceService()
+        sharePreferenceService?.scanXml(baseContext!!)
+        sharePreferenceService?.listener(baseContext!!)
         super.onCreate()
     }
 
@@ -65,7 +68,7 @@ class CommonBackgroundServer:Service() {
 
     public inner class CommonBackgroundBinder:Binder() {
         fun getShareFileList():LiveData<List<File>> {
-            return sharePreferenceService.shareFileResult
+            return sharePreferenceService!!.shareFileResult
         }
     }
 

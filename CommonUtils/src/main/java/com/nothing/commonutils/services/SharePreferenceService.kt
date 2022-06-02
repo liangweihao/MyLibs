@@ -94,6 +94,7 @@ class SharePreferenceService {
 
     fun unListener() {
         fileObserver?.stopWatching()
+        fileObserver = null
     }
 
 }
