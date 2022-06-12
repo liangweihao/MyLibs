@@ -6,7 +6,6 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import com.nothing.commonutils.services.CommonBackgroundServer
-import com.nothing.commonutils.services.SharePreferenceService
 import com.nothing.commonutils.utils.addLogAdapter
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.CsvFormatStrategy

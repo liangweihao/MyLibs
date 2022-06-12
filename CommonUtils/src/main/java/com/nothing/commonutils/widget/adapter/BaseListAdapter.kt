@@ -1,7 +1,7 @@
 package com.nothing.commonutils.widget.adapter
 
 import android.content.res.Resources
- import android.util.SparseArray
+import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MainThread
@@ -39,6 +39,7 @@ import kotlin.reflect.KClass
  */
 
 val TAG = "BaseListAdapter"
+
 class BaseDiffItemCallback:DiffUtil.ItemCallback<Any>() {
 
     private var ad:BaseListAdapter? = null
@@ -67,6 +68,12 @@ fun RecyclerView.createAutoUnbindListChangedAdapter(lifecycle:Lifecycle, list:Ob
 }
 
 
+fun RecyclerView.createBaseAdapter():BaseListAdapter {
+    val multiTypeAdapter = BaseListAdapter()
+    this.adapter = multiTypeAdapter
+    return multiTypeAdapter
+}
+
 open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
 
     private var outDataObserver:OutAdapterDataObserver = OutAdapterDataObserver()
@@ -82,23 +89,23 @@ open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
         var binderInfo:BaseListAdapter.BinderInfo<Any>? = null
         hashMap.forEach {
             val old = it.key.isInstance(oldItem)
-            if (old){
+            if (old) {
                 oldHashCode = it.key.hashCode()
-                binderInfo =  it.value.binderInfo
+                binderInfo = it.value.binderInfo
             }
 
             val new = it.key.isInstance(newItem)
-            if (new){
+            if (new) {
                 newHashCode = it.key.hashCode()
-                binderInfo =  it.value.binderInfo
+                binderInfo = it.value.binderInfo
             }
         }
 
-        if (oldHashCode != newHashCode){
+        if (oldHashCode != newHashCode) {
             return false
         }
 
-        return binderInfo?.compare(oldItem,newItem)?:false
+        return binderInfo?.compare(oldItem, newItem) ?: false
     }
 
     fun areContentsTheSame(oldItem:Any, newItem:Any):Boolean {
@@ -119,12 +126,18 @@ open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
     }
 
 
-
     override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):ViewHolderInner {
         val layoutID = getLayoutID(viewType)
         var child:View? = null
         if (layoutID > 0) {
             child = parent.inflate(layoutID)
+            hashMap.forEach {
+                if (it.key.hashCode() == viewType) {
+                    it.value.binderInfo.genLayoutParams(child, viewType)?.also { params->
+                        child.layoutParams = params
+                    }
+                }
+            }
             return ViewHolderInner(child)
         }
         throw Resources.NotFoundException("view type not found :$viewType") //        return null
@@ -178,6 +191,7 @@ open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
         val itemViewType = getItemViewType(position)
         hashMap.forEach {
             if (it.key.hashCode() == itemViewType) {
+                it.value.binderInfo.model = currentList[position]
                 it.value.binderInfo.onBind(holder)
                 return@forEach
             }
@@ -200,7 +214,8 @@ open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
     data class ViewInfo<T>(val layoutID:Int = 0, var binderInfo:BinderInfo<T>)
 
     fun <T> register(modelClass:KClass<*>, layoutID:Int, info:BinderInfo<T>) {
-        hashMap[modelClass] = ViewInfo<Any>(layoutID = layoutID, binderInfo = info as BinderInfo<Any>)
+        hashMap[modelClass] =
+            ViewInfo<Any>(layoutID = layoutID, binderInfo = info as BinderInfo<Any>)
     }
 
 
@@ -310,13 +325,22 @@ open class BaseListAdapter:ListAdapter<Any, ViewHolderInner> {
     var outDataMap = SparseArray<HashMap<String, Any>>()
 
     public abstract class BinderInfo<T> {
+
+        var model:T? = null
+
         // TODO:LWH  2022/5/16  这里把position去掉了 原因是 如果数据发生变化了 那么这个position其实是不准确的
         abstract fun onBind(holder:ViewHolderInner)
 
-        open fun compare(old:T, now:T):Boolean{
+        open fun compare(old:T, now:T):Boolean {
 
             return false
         }
+
+        open fun genLayoutParams(parent:View, viewType:Int):ViewGroup.LayoutParams? {
+            return null
+        }
+
+
     }
 }
 
@@ -346,7 +370,6 @@ class ViewHolderInner(itemView:View):RecyclerView.ViewHolder(itemView) {
         }
         return binding as T
     }
-
 
     fun unBindDataBinding() {
         binding?.unbind()

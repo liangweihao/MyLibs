@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/tv_text"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:text="123"
+        android:textSize="14dp"
+        android:text="@{title}"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:textColor="@color/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    </TextView>
+    <data>
+        <variable
+            name="title"
+            type="String" />
+    </data>
+
+</layout>

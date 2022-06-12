@@ -1,17 +1,17 @@
 package com.nothing.commonutils.services
 
 import android.app.Service
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.res.Configuration
 import android.os.Binder
 import android.os.IBinder
-import android.os.IInterface
-import android.os.Parcel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import com.nothing.commonutils.utils.SharePreferenceService
 import com.nothing.commonutils.utils.d
 import java.io.File
-import java.io.FileDescriptor
 
 /**
  *--------------------
@@ -28,9 +28,26 @@ import java.io.FileDescriptor
  *<p>Attention:
  *--------------------
  */
+
+fun Context.bindServices(connection:CommonBackgroundConnection) {
+
+    bindService(Intent(this, CommonBackgroundServer::class.java), connection, Context.BIND_AUTO_CREATE)
+}
+
+abstract class CommonBackgroundConnection:ServiceConnection {
+    final override fun onServiceConnected(name:ComponentName?, service:IBinder?) {
+        onServiceConnected(service as CommonBackgroundServer.CommonBackgroundBinder)
+    }
+
+    abstract fun onServiceConnected(binder:CommonBackgroundServer.CommonBackgroundBinder)
+
+    override fun onServiceDisconnected(name:ComponentName?) {
+    }
+}
+
 class CommonBackgroundServer:Service() {
     private val TAG = "CommonBackgroundServer"
-    private var sharePreferenceService: SharePreferenceService? = null
+    private var sharePreferenceService:SharePreferenceService? = null
 
     private var binder = CommonBackgroundBinder()
     override fun onBind(intent:Intent?):CommonBackgroundBinder {

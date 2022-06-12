@@ -1,0 +1,60 @@
+//apply plugin: 'maven-publish'
+//
+//
+//buildscript {
+//    ext {
+//        GitHubName = "liangweihao"
+//        TOKEN = "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"
+//    }
+//}
+//publishing {
+//    repositories {
+//        maven {
+//            name = "LLibs"
+//            url = uri("https://maven.pkg.github.com/$GitHubName/MyLibs")
+//            credentials {
+//                username = "$GitHubName"
+//                password = "$TOKEN"
+//
+//            }
+//        }
+//    }
+//    publications {
+//        //This defines a publication called "JohnBase"
+//        // that can be published to a Maven repository
+//        // by virtue of its type: MavenPublication.
+//        LLibs(MavenPublication) {
+////            This publication consists of just
+////            the production JAR artifact and its metadata,
+////            which combined are represented by the
+////            java component of the project.
+////            from components.java
+//            groupId = 'com.nothing.commonutils'
+//            artifactId = 'LLibs'
+//            version = '1.0.0'
+//            artifact("$buildDir/outputs/aar/CommonUtils-release.aar")
+//        }
+//    }
+//}
+
+apply plugin: 'maven-publish'
+publishing {
+    repositories {
+        maven {
+            name = "MyLibs"
+            url = uri("https://maven.pkg.github.com/liangweihao/MyLibs")
+            credentials {
+                username = "liangweihao"
+                password = "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"
+            }
+        }
+    }
+    publications {
+        MyLibs(MavenPublication) {
+            groupId = 'com.nothing.commonutils'
+            artifactId = 'LLibs'
+            version = '1.0.0'
+            artifact("$buildDir/outputs/aar/CommonUtils-release.aar")
+        }
+    }
+}
