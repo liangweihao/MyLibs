@@ -60,5 +60,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyLibs"
 include ':common'
-include ':server_core'
+//include ':server_core'
 include ':demo'
