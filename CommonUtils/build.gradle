@@ -1,18 +1,18 @@
 plugins {
     id 'com.android.library'
+//    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id "org.jetbrains.kotlin.kapt"
 }
-//apply from: 'publish.gradle'
-apply plugin: 'org.jetbrains.kotlin.android'
-apply plugin: 'kotlin-kapt'
-//apply plugin: 'android-aspectjx'
+
 
 
 android {
-    compileSdk 31
-
+    compileSdk configCompileSDK
+    namespace 'com.nothing.commonutils'
     defaultConfig {
-        minSdk 21
-        targetSdk 31
+        minSdk configMinSDK
+        targetSdk configTargetSDK
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
