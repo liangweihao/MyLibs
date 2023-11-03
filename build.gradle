@@ -19,6 +19,9 @@ ext {
     configMajorVersionName = "1.1.1"
 //  包名字
     configMajorPackageName = "com.android.gallery3"
+
+
 }
+
 
 

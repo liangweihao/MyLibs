@@ -8,6 +8,23 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        maven {
+            credentials {
+                username '5f963d8b18c17e7748e21932'
+                password 'GrkJhRnBbJ_S'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2236604-release-GJXgei/'
+        }
+        maven {
+            credentials {
+                username '5f963d8b18c17e7748e21932'
+                password 'GrkJhRnBbJ_S'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2236604-snapshot-ykFnBh/'
+        }
     }
 }
 dependencyResolutionManagement {
@@ -20,8 +37,26 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        maven {
+            credentials {
+                username '5f963d8b18c17e7748e21932'
+                password 'GrkJhRnBbJ_S'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2236604-release-GJXgei/'
+        }
+        maven {
+            credentials {
+                username '5f963d8b18c17e7748e21932'
+                password 'GrkJhRnBbJ_S'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2236604-snapshot-ykFnBh/'
+        }
     }
 }
+
 
 rootProject.name = "MyLibs"
 include ':CommonUtils'

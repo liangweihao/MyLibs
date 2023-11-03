@@ -3,10 +3,40 @@ plugins {
 //    id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id "org.jetbrains.kotlin.kapt"
+//    id 'java'
+    id 'maven-publish'
 }
 
 
 
+afterEvaluate {
+    publishing {
+        publications {
+            plugin(MavenPublication) {
+//                from components.java
+                groupId = 'com.nothing.utils'
+                artifactId = 'common'
+                version = '1.0.0'
+            }
+        }
+        repositories {
+            maven {
+                url = 'https://packages.aliyun.com/maven/repository/2236604-release-GJXgei/'
+                credentials {
+                    username = '5f963d8b18c17e7748e21932'
+                    password = 'GrkJhRnBbJ_S'
+                }
+            }
+            maven {
+                url = 'https://packages.aliyun.com/maven/repository/2236604-snapshot-ykFnBh/'
+                credentials {
+                    username = '5f963d8b18c17e7748e21932'
+                    password = 'GrkJhRnBbJ_S'
+                }
+            }
+        }
+    }
+}
 android {
     compileSdk configCompileSDK
     namespace 'com.nothing.commonutils'
