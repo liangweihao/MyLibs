@@ -1,0 +1,69 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id "org.jetbrains.kotlin.kapt"
+}
+
+
+android {
+    namespace configMajorPackageName
+    compileSdk configCompileSDK
+
+    buildFeatures{
+        buildConfig true
+    }
+    defaultConfig {
+        applicationId configMajorPackageName
+        minSdk configMinSDK
+        targetSdk configTargetSDK
+        versionCode configMajorVersion
+        versionName configMajorVersionName
+
+        vectorDrawables {
+            useSupportLibrary true
+        }
+    }
+
+
+    viewBinding {
+        enabled = true
+    }
+
+
+
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
+    }
+
+    kotlin {
+
+        // For example:
+        jvmToolchain(17)
+    }
+}
+
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
+
+    implementation('androidx.fragment:fragment-ktx:1.6.0-alpha08')
+
+
+}

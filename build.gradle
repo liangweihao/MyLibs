@@ -9,16 +9,18 @@ plugins {
 }
 ext {
 //  编译版本
-    configCompileSDK = 32
+    configCompileSDK = 33
 //  目标版本
-    configTargetSDK = 32
+    configTargetSDK = 33
 //  最小版本
     configMinSDK = 26
 //  版本号
     configMajorVersion = 11
     configMajorVersionName = "1.1.1"
 //  包名字
-    configMajorPackageName = "com.android.gallery3"
+    configMajorPackageName = "com.nothing.demo"
+    kotlin_version = '1.8.20'
+    javaSDK = JavaVersion.VERSION_17
 
 
 }

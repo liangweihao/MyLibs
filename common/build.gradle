@@ -1,9 +1,7 @@
 plugins {
     id 'com.android.library'
-//    id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id "org.jetbrains.kotlin.kapt"
-//    id 'java'
     id 'maven-publish'
 }
 
@@ -13,8 +11,7 @@ afterEvaluate {
     publishing {
         publications {
             plugin(MavenPublication) {
-//                from components.java
-                groupId = 'com.nothing.utils'
+                groupId = 'com.nothing.commonutils'
                 artifactId = 'common'
                 version = '1.0.0'
             }
@@ -55,8 +52,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility javaSDK
+        targetCompatibility javaSDK
     }
 
     buildFeatures {

@@ -4,15 +4,7 @@
 
     <application>
 
-        <activity android:name=".activity.SpListActivity"
-            android:exported="true">
 
-            <intent-filter>
-                <action android:name="com.nothing.commonUtils.SpList" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-            </intent-filter>
-        </activity>
 
         <provider
             android:name=".InitProvider"

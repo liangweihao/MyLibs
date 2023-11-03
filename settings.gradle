@@ -59,4 +59,6 @@ dependencyResolutionManagement {
 
 
 rootProject.name = "MyLibs"
-include ':CommonUtils'
+include ':common'
+include ':server_core'
+include ':demo'
