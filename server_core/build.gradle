@@ -1,0 +1,60 @@
+
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+group = 'com.github.fengzhizi715'
+
+
+android {
+    compileSdk configCompileSDK
+//    buildToolsVersion cfg.buildToolsVersion
+    namespace "com.safframework.androidserver.core"
+    defaultConfig {
+        minSdk configMinSDK
+        targetSdk configTargetSDK
+        versionCode 1
+        versionName "1.0"
+
+         consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+
+    implementation "io.netty:netty-all:4.1.48.Final"
+}
+
+//repositories {
+//    mavenCentral()
+//    maven { url 'https://jitpack.io' }
+//}
+//
+//allprojects {
+//    repositories {
+//        mavenCentral()
+//        maven { url 'https://jitpack.io' }
+//    }
+//    //加上这些
+//    tasks.withType(Javadoc) {
+//        options{ encoding "UTF-8"
+//            charSet 'UTF-8'
+//            links "http://docs.oracle.com/javase/7/docs/api"
+//        }
+//    }
+//}
