@@ -5,34 +5,13 @@ import android.content.ContentValues
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
-import com.nothing.commonutils.services.CommonBackgroundServer
-import com.nothing.commonutils.utils.addLogAdapter
-import com.orhanobut.logger.AndroidLogAdapter
-import com.orhanobut.logger.CsvFormatStrategy
-import com.orhanobut.logger.PrettyFormatStrategy
+import com.nothing.commonutils.utils.Lg
 
-/**
- *--------------------
- *<p>Author：
- *         liangweihao
- *<p>Created Time:
- *          2022/5/17
- *<p>Intro:
- *
- *<p>Thinking:
- *
- *<p>Problem:
- *
- *<p>Attention:
- *--------------------
- */
+
+
 class InitProvider:ContentProvider() {
     override fun onCreate():Boolean {
-        addLogAdapter(AndroidLogAdapter(PrettyFormatStrategy.newBuilder().methodCount(1)
-                                            .showThreadInfo(false).methodOffset(1)
-                                            .tag("CommonLog").build()))
-        addLogAdapter(AndroidLogAdapter(CsvFormatStrategy.newBuilder().build()))
-        context!!.startService(Intent(context, CommonBackgroundServer::class.java))
+        Lg.init(context)
         return true
     }
 

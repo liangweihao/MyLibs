@@ -127,7 +127,7 @@ object RomUtils {
             line = input.readLine()
             input.close()
         } catch (ex:IOException) {
-            e(TAG + "Unable to read prop $name", ex)
+            Lg.e(TAG ,"Unable to read prop $name %s", ex.localizedMessage)
             return null
         } finally {
             if (input != null) {

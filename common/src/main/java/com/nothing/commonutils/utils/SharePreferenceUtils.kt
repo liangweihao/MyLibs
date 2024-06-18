@@ -6,21 +6,7 @@ import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
 
-/**
- *--------------------
- *<p>Author：
- *         liangweihao
- *<p>Created Time:
- *          2022/6/2
- *<p>Intro:
- *
- *<p>Thinking:
- *
- *<p>Problem:
- *
- *<p>Attention:
- *--------------------
- */
+
 // 通过文件获得sp
 fun getSharePreference(context:Context, dir:File):SharedPreferences {
     val name = dir.name.replace(".xml", "")

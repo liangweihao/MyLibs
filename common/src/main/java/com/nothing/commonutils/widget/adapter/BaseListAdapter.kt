@@ -17,26 +17,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.nothing.commonutils.inflate
 import com.nothing.commonutils.utils.AutoListChangedListUnbind
-import com.nothing.commonutils.utils.ListChangedListener
 import com.nothing.commonutils.utils.ListDiffChangedListener
-import com.nothing.commonutils.utils.d
 import kotlin.reflect.KClass
 
-/**
- *--------------------
- *<p>Author：
- *         liangweihao
- *<p>Created Time:
- *          2022/5/10
- *<p>Intro:
- *
- *<p>Thinking:
- *
- *<p>Problem:
- *
- *<p>Attention:
- *--------------------
- */
+
 
 val TAG = "BaseListAdapter"
 
