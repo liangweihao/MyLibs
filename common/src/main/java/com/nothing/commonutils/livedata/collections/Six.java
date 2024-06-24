@@ -1,7 +1,11 @@
 package com.nothing.commonutils.livedata.collections;
 
 
+import com.nothing.commonutils.utils.GsonUtils;
+
 import java.util.Objects;
+
+import androidx.annotation.NonNull;
 
 public class Six<A,B,C,D,E,F> extends Five<A,B,C,D,E>{
     public final F six;
@@ -26,5 +30,10 @@ public class Six<A,B,C,D,E,F> extends Five<A,B,C,D,E>{
         int result = super.hashCode();
         result = 31 * result + (six != null ? six.hashCode() : 0);
         return result;
+    }
+    @NonNull
+    @Override
+    public String toString() {
+        return GsonUtils.toJson(this);
     }
 }

@@ -1,7 +1,7 @@
 package com.nothing.commonutils.livedata.collections;
 
 
-import com.inair.space.utils.GsonUtils;
+import com.nothing.commonutils.utils.GsonUtils;
 
 import java.util.Objects;
 
