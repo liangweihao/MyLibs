@@ -66,6 +66,24 @@ public class FragmentUtils {
             }
         });
     }
+
+    public static void addPop(FragmentManager fragmentManager,LifecycleOwner lifecycle,@IdRes int containerViewId, @NonNull Fragment fragment,
+                                     @Nullable String tag){
+        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
+            @Override
+            public void run() {
+                Try.catchSelf(() -> fragmentManager.beginTransaction().add(containerViewId,
+                        fragment,
+                        tag).addToBackStack(tag).commit());
+
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        });
+    }
     public static void replaceAddPop(FragmentManager fragmentManager,LifecycleOwner lifecycle,@IdRes int containerViewId, @NonNull Fragment fragment,
                                @Nullable String tag){
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
