@@ -6,9 +6,6 @@
 
 
 
-        <provider
-            android:name=".InitProvider"
-            android:authorities="commonUtils" />
 
     </application>
 
