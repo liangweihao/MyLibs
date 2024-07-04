@@ -227,17 +227,6 @@ public class OpenGLTest {
                         GLES20.glCompileShader(vertexShader);
                         GLES20.glCompileShader(fragmentShader);
                         GLES20.glLinkProgram(glProgram);
-
-
-                        int glGetError = GLES20.glGetError();
-                        String eglErrorString = GLUtils.getEGLErrorString(glGetError);
-
-                    } else {
-
-                        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-                        GLES20.glClearColor(0.4f, 0.8f, 0.7f, 1f);
-
-                        GLES20.glUseProgram(glProgram);
                         GLES20.glGenFramebuffers(1, framebuffers, 0);
                         GLES20.glGenRenderbuffers(1, renderbuffers, 0);
                         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
@@ -247,9 +236,18 @@ public class OpenGLTest {
                         GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
                                                          GLES20.GL_COLOR_ATTACHMENT0,
                                                          GLES20.GL_RENDERBUFFER, renderbuffers[0]);
-                        int inputPointIndex = GLES20.glGetAttribLocation(glProgram, "inputPoint");
-                        GLES20.glEnableVertexAttribArray(inputPointIndex);
+                        int glGetError = GLES20.glGetError();
+                        String eglErrorString = GLUtils.getEGLErrorString(glGetError);
 
+                    } else {
+
+                        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+                        GLES20.glClearColor(0.4f, 0.8f, 0.7f, 1f);
+
+                        GLES20.glUseProgram(glProgram);
+
+
+                        int inputPointIndex = GLES20.glGetAttribLocation(glProgram,"inputPoint");
                         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
                         GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderbuffers[0]);
                         float[] vertexPoints
@@ -264,6 +262,8 @@ public class OpenGLTest {
                                                         .order(ByteOrder.nativeOrder())
                                                         .asFloatBuffer()
                                                         .put(vertexPoints).position(0);
+
+                        GLES20.glEnableVertexAttribArray(inputPointIndex);
                         GLES20.glVertexAttribPointer(inputPointIndex, 2, GLES20.GL_FLOAT, false, 0,
                                                      vertexBuffer);
 
@@ -281,6 +281,7 @@ public class OpenGLTest {
                         GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0);
                         int eglGetError = EGL14.eglGetError();
 
+                        GLES20.glDeleteProgram(glProgram);
                         try {
                             Thread.sleep(160);
                         } catch (InterruptedException e) {
