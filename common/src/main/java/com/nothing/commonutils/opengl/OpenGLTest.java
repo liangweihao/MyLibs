@@ -154,6 +154,10 @@ public class OpenGLTest {
      *                                                         .order(ByteOrder.nativeOrder())
      *                                                         .asFloatBuffer()
      *                                                         .put(vertexPoints); 没有进行 position(0) 的复位操作
+     * 踩坑：
+     *          glGenBuffers / glBindBuffer / glBufferData / glEnableVertexAttribArray / glVertexArrayPointer /glDrawArray
+     *          绘制完毕以后发现 没有内容 最终发现 glBufferData的size 没有设置对  例如 width * height * 4 / buffer.capacity() * 4
+     *
      */
     public static void 离屏渲染绘制一个矩形() {
 
@@ -165,7 +169,15 @@ public class OpenGLTest {
                 super.run();
                 int[] framebuffers = new int[1];
                 int[] renderbuffers = new int[1];
+                int[] buffers = new int[1];
+                float[] vertexPoints
+                        = new float[]{-0.5f,0.5f,
+                        0.5f,0.5f,
+                        0.5f,-0.5f,
+                        -0.5f,-0.5f,
+                        -0.5f,0.5f
 
+                };
                 int surfaceWidth = 1920;
                 int surfaceHeight = 1080;
                 int glProgram = 0;
@@ -239,6 +251,17 @@ public class OpenGLTest {
                         int glGetError = GLES20.glGetError();
                         String eglErrorString = GLUtils.getEGLErrorString(glGetError);
 
+
+                        GLES20.glGenBuffers(1, buffers, 0);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,buffers[0]);
+
+                        Buffer vertexBuffer = ByteBuffer.allocateDirect(vertexPoints.length * 4)
+                                                        .order(ByteOrder.nativeOrder())
+                                                        .asFloatBuffer()
+                                                        .put(vertexPoints).position(0);
+                        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,vertexBuffer.capacity() * 4 ,vertexBuffer,GLES20.GL_STATIC_DRAW);
+
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
                     } else {
 
                         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
@@ -250,25 +273,21 @@ public class OpenGLTest {
                         int inputPointIndex = GLES20.glGetAttribLocation(glProgram,"inputPoint");
                         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
                         GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderbuffers[0]);
-                        float[] vertexPoints
-                                = new float[]{-0.5f,0.5f,
-                                0.5f,0.5f,
-                                0.5f,-0.5f,
-                                -0.5f,-0.5f,
-                                -0.5f,0.5f
-
-                        };
-                        Buffer vertexBuffer = ByteBuffer.allocateDirect(vertexPoints.length * 4)
-                                                        .order(ByteOrder.nativeOrder())
-                                                        .asFloatBuffer()
-                                                        .put(vertexPoints).position(0);
-
                         GLES20.glEnableVertexAttribArray(inputPointIndex);
-                        GLES20.glVertexAttribPointer(inputPointIndex, 2, GLES20.GL_FLOAT, false, 0,
-                                                     vertexBuffer);
+
+//                        Buffer vertexBuffer = ByteBuffer.allocateDirect(vertexPoints.length * 4)
+//                                                        .order(ByteOrder.nativeOrder())
+//                                                        .asFloatBuffer()
+//                                                        .put(vertexPoints).position(0);
+//
+//                        GLES20.glVertexAttribPointer(inputPointIndex, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,buffers[0]);
+                        GLES20.glVertexAttribPointer(inputPointIndex, 2, GLES20.GL_FLOAT,false,0,0);
+
 
                         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertexPoints.length / 2);
-                        GLES20.glDisableVertexAttribArray(inputPointIndex);
+//                        GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP,vertexPoints.length/2,GLES20.GL_UNSIGNED_SHORT,0);
 
                         Buffer pixels = IntBuffer.allocate(surfaceWidth * surfaceHeight );
                         glReadPixels(0, 0, surfaceWidth, surfaceHeight, GLES20.GL_RGBA,
@@ -280,7 +299,8 @@ public class OpenGLTest {
                         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
                         GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0);
                         int eglGetError = EGL14.eglGetError();
-
+                        GLES20.glDisableVertexAttribArray(inputPointIndex);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
                         GLES20.glDeleteProgram(glProgram);
                         try {
                             Thread.sleep(160);
