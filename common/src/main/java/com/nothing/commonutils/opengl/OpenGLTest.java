@@ -461,6 +461,20 @@ public class OpenGLTest {
                         GLES20.glBindFramebuffer(GL_FRAMEBUFFER,0);
                         GLES20.glBindRenderbuffer(GL_RENDERBUFFER,0);
 
+                        GLES20.glGenTextures(1, textures, 0);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,textures[0]);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
+                        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_RGBA,bitmap,0);
+                        int inputTextureIndex = GLES20.glGetUniformLocation(program, "inputTexture");
+                        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+                        GLES20.glUniform1i(inputTextureIndex,0);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,0);
+
+
+
                         eglErrorString = GLES20.glGetProgramInfoLog(program);
                         eglErrorString = GLUtils.getEGLErrorString(GLES20.glGetError());
                         Lg.d(TAG, " egl error %s", eglErrorString);
@@ -488,17 +502,7 @@ public class OpenGLTest {
                                                      false, 0, 0);
                         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
-                        GLES20.glGenTextures(1, textures, 0);
                         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,textures[0]);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
-                        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_RGBA,bitmap,0);
-                        int inputTextureIndex = GLES20.glGetUniformLocation(program, "inputTexture");
-                        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                        GLES20.glUniform1i(inputTextureIndex,0);
-
                         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN,0,pointVertex.length/2);
                         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,0);
 
