@@ -330,6 +330,12 @@ public class OpenGLTest {
      *      使用 bufferdata 完毕以后直接使用了 glDisableVertexAttribArray 导致 drawArrays 没有任何效果
      *      在glDrawArrays 之前就进行了 glBindTexture(GLES20.GL_TEXTURE_2D,0); 导致 绘制图片失效了
      *
+     * 怎么用？？？
+     *                           GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
+     *                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
+     *                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
+     *                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
+     *                         texVertex 假如 这个顶点的数据 大于 1 就开始生效纹理的拉伸规则了
      * */
     public static void 离屏渲染题图四边形(Bitmap bitmap) {
         Thread thread = new Thread() {
@@ -484,8 +490,8 @@ public class OpenGLTest {
 
                         GLES20.glGenTextures(1, textures, 0);
                         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,textures[0]);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_CLAMP_TO_EDGE);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_CLAMP_TO_EDGE);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
                         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_RGBA,bitmap,0);
