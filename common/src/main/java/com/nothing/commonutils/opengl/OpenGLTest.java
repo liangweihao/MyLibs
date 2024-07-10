@@ -2,6 +2,8 @@ package com.nothing.commonutils.opengl;
 
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
@@ -20,9 +22,11 @@ import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGL10;
 
+import static android.opengl.GLES20.GL_FRAGMENT_SHADER;
 import static android.opengl.GLES20.GL_FRAMEBUFFER;
 import static android.opengl.GLES20.GL_RENDERBUFFER;
 import static android.opengl.GLES20.GL_RGBA4;
+import static android.opengl.GLES20.GL_VERTEX_SHADER;
 import static android.opengl.GLES20.glReadPixels;
 
 public class OpenGLTest {
@@ -327,16 +331,20 @@ public class OpenGLTest {
 
     /**
      * 踩坑；
-     *      使用 bufferdata 完毕以后直接使用了 glDisableVertexAttribArray 导致 drawArrays 没有任何效果
-     *      在glDrawArrays 之前就进行了 glBindTexture(GLES20.GL_TEXTURE_2D,0); 导致 绘制图片失效了
-     *
+     * 使用 bufferdata 完毕以后直接使用了 glDisableVertexAttribArray 导致 drawArrays 没有任何效果
+     * 在glDrawArrays 之前就进行了 glBindTexture(GLES20.GL_TEXTURE_2D,0); 导致 绘制图片失效了
+     * <p>
      * 怎么用？？？
-     *                           GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
-     *                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
-     *                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
-     *                         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
-     *                         texVertex 假如 这个顶点的数据 大于 1 就开始生效纹理的拉伸规则了
-     * */
+     * GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
+     * GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
+     * GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
+     * GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
+     * texVertex 假如 这个顶点的数据 大于 1 就开始生效纹理的拉伸规则了
+     * 知识点：
+     * glBindFramebuffer 设置新的 framebuffer 绑定到帧 buffer 名字上 并且会把之前绑定的释放，这就导致了当你绑定了一个 buffer 以后 在执行了一次glBindFramebuffer就会把 buffer 内容清理了 此时如果不尽兴
+     * drawArray行为的话就会导致缓冲区的图像没有内容了， 注意了 glBindRenderbuffer 再次绑定实际上不会影响到 glReadPixels 的行为 我理解因为 内容已经写到了缓冲区中了
+     * glBindRenderbuffer的生命周期。 glBindRenderbuffer绑定了另外一个 name 但是不会清空 buffer 或者是通过glDeleteRenderbuffers 删除了 同理  glDeleteFramebuffers.也是这个样子
+     */
     public static void 离屏渲染题图四边形(Bitmap bitmap) {
         Thread thread = new Thread() {
             boolean contextCreated = false;
@@ -348,29 +356,24 @@ public class OpenGLTest {
             int picPositionIndex = 0;
             int inputTexPositionIndex = 0;
             String eglErrorString = "";
-            float[] pointVertex
-                    = new float[]{-0.8f, 0.8f, 0.8f, 0.8f, 0.8f, -0.8f, -0.8f, -0.8f };
+            float[] pointVertex = new float[]{-0.8f, 0.8f, 0.8f, 0.8f, 0.8f, -0.8f, -0.8f, -0.8f};
 
-            float[] texVertex = new float[]{0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f };
+            float[] texVertex = new float[]{0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f};
             int[] textures = new int[1];
             int[] framebuffers = new int[1];
             int[] renderbuffers = new int[1];
 
-            String vShader = "attribute vec2 picPosition;" +
-                             "attribute vec2 inputTexPosition;" +
-                             "varying vec2 texPosition;" +
-                             "void main(){" +
+            String vShader = "attribute vec2 picPosition;" + "attribute vec2 inputTexPosition;" +
+                             "varying vec2 texPosition;" + "void main(){" +
                              "    gl_Position = vec4(picPosition,1.0,1.0);" +
-                             "    texPosition = inputTexPosition;" +
-                             "}";
+                             "    texPosition = inputTexPosition;" + "}";
 
-            String fShader = "precision mediump float;" +
-                             "uniform sampler2D inputTexture;" +
-                             "varying vec2 texPosition;" +
-                             "void main(){" +
+            String fShader = "precision mediump float;" + "uniform sampler2D inputTexture;" +
+                             "varying vec2 texPosition;" + "void main(){" +
                              "      gl_FragColor = texture2D(inputTexture,texPosition);" +
 //                             "      gl_FragColor = vec4(0.5,0.8,0.1,1.0);" +
                              "}";
+
             @Override
             public void run() {
                 super.run();
@@ -451,30 +454,55 @@ public class OpenGLTest {
                                                       .position(0), GLES20.GL_STATIC_DRAW);
 
 
-
                         GLES20.glGenFramebuffers(1, framebuffers, 0);
                         GLES20.glGenRenderbuffers(1, renderbuffers, 0);
-                        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER,framebuffers[0]);
-                        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER,renderbuffers[0]);
-                        GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER,GL_RGBA4,surfaceWidth,surfaceHeight);
-                        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,GLES20.GL_COLOR_ATTACHMENT0,GLES20.GL_RENDERBUFFER,renderbuffers[0]);
-                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER,0);
-                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER,0);
+                        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
+                        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renderbuffers[0]);
+                        // 更新渲染缓冲区的参数
+                        GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GL_RGBA4, surfaceWidth,
+                                                     surfaceHeight);
+                        // 首先获取 GL_FRAMEBUFFER 获取帧缓冲区 然后根据渲染缓冲区得到渲染对象 并且通过渲染对象得到采样， 然后将渲染的对象和采样 附加到帧缓冲区
+                        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
+                                                         GLES20.GL_COLOR_ATTACHMENT0,
+                                                         GLES20.GL_RENDERBUFFER, renderbuffers[0]);
+                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
                         GLES20.glGenTextures(1, textures, 0);
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,textures[0]);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S,GLES20.GL_MIRRORED_REPEAT);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T,GLES20.GL_MIRRORED_REPEAT);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER,GLES20.GL_LINEAR);
-                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER,GLES20.GL_LINEAR);
-                        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_RGBA,bitmap,0);
-                        int inputTextureIndex = GLES20.glGetUniformLocation(program, "inputTexture");
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+                                               GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+                                               GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
+                                               GLES20.GL_LINEAR);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
+                                               GLES20.GL_LINEAR);
+                        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+                        int inputTextureIndex = GLES20.glGetUniformLocation(program,
+                                                                            "inputTexture");
                         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                        GLES20.glUniform1i(inputTextureIndex,0);
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,0);
+                        GLES20.glUniform1i(inputTextureIndex, 0);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 
+                        // 空间顶点
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
+                        GLES20.glEnableVertexAttribArray(picPositionIndex);
+                        GLES20.glVertexAttribPointer(picPositionIndex, 2, GLES20.GL_FLOAT, false, 0,
+                                                     0);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+                        GLES20.glDisableVertexAttribArray(picPositionIndex);
 
+                        // 纹理顶点
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1]);
+                        GLES20.glEnableVertexAttribArray(inputTexPositionIndex);
+                        GLES20.glVertexAttribPointer(inputTexPositionIndex, 2, GLES20.GL_FLOAT,
+                                                     false, 0, 0);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+                        GLES20.glDisableVertexAttribArray(inputTexPositionIndex);
 
+                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER, 0);
                         eglErrorString = GLES20.glGetProgramInfoLog(program);
                         eglErrorString = GLUtils.getEGLErrorString(GLES20.glGetError());
                         Lg.d(TAG, " egl error %s", eglErrorString);
@@ -483,39 +511,23 @@ public class OpenGLTest {
                         EGLContext eglGetCurrentContext = EGL14.eglGetCurrentContext();
 
                         GLES20.glUseProgram(program);
-                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER,framebuffers[0]);
-                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER, renderbuffers[0]);
-
-
-                        // 空间顶点
-                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
                         GLES20.glEnableVertexAttribArray(picPositionIndex);
-                        GLES20.glVertexAttribPointer(picPositionIndex, 2, GLES20.GL_FLOAT, false, 0,
-                                                     0);
-                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-
-
-                        // 纹理顶点
-                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1]);
                         GLES20.glEnableVertexAttribArray(inputTexPositionIndex);
-                        GLES20.glVertexAttribPointer(inputTexPositionIndex, 2, GLES20.GL_FLOAT,
-                                                     false, 0, 0);
-                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,textures[0]);
-                        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN,0,pointVertex.length/2);
-                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,0);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
 
+                        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, pointVertex.length / 2);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 
                         Buffer pixels = IntBuffer.allocate(surfaceWidth * surfaceHeight);
-                        GLES20.glReadPixels(0, 0, surfaceWidth, surfaceHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixels);
+                        GLES20.glReadPixels(0, 0, surfaceWidth, surfaceHeight, GLES20.GL_RGBA,
+                                            GLES20.GL_UNSIGNED_BYTE, pixels);
                         Bitmap bitmap = Bitmap.createBitmap(surfaceWidth, surfaceHeight,
                                                             Bitmap.Config.ARGB_8888, false);
                         bitmap.copyPixelsFromBuffer(pixels.rewind());
-                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER,0);
+                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         GLES20.glBindRenderbuffer(GL_RENDERBUFFER, 0);
-                        GLES20.glDisableVertexAttribArray(picPositionIndex);
-                        GLES20.glDisableVertexAttribArray(inputTexPositionIndex);
+
 
                         GLES20.glDeleteProgram(program);
                         GLES20.glReleaseShaderCompiler();
@@ -536,7 +548,250 @@ public class OpenGLTest {
     }
 
 
-    public static void 离屏渲染题图正方向居中裁剪() {
+    public static int glGet(int pname) {
+        int[] params = new int[1];
+        GLES20.glGetIntegerv(pname, params, 0);
+        return params[0];
+    }
+
+    public static int[] glGetBuffer(int target, int pname) {
+        int[] params = new int[2];
+        GLES20.glGetBufferParameteriv(target, pname, params, 0);
+        return params;
+    }
+
+    /**
+     * 坑： 创建着色器的时候 没有进行glCreateShader 的方式
+     * glCreateProgram 的时候 会报 501 实际上正常的程序也会报
+     * GLES20.glGetBufferParameteriv(GLES20.GL_ARRAY_BUFFER, GLES20.GL_BUFFER_SIZE, arrayBufferParams, 0); 测量是的对象的 bytes
+     * 踩坑：glVertexAttribPointer size：应该是数据的长度 x,y 应该是 2 否则就 导致绘制不出来
+     */
+    // 矩阵的应用
+    public static void 离屏渲染题图正方向居中裁剪_MAT(Bitmap bitmap) {
+
+        Thread thread = new Thread() {
+
+
+            @Override
+            public void run() {
+                super.run();
+                int vexPositionIndex = 0;
+                int inputTexturePositionIndex = 0;
+                boolean contextCreated = false;
+                int program = 0;
+                int surfaceWidth = 1920;
+                int surfaceHeight = 1080;
+                String vertexSource = "attribute vec2 vexPosition;" +
+                                      "attribute vec2 inputTexturePosition;" +
+                                      "varying vec2 texPosition;" + "void main(){" +
+                                      "     gl_Position = vec4(vexPosition,1.0,1.0);" +
+                                      "     texPosition = inputTexturePosition;" + "}";
+
+                String fragmentSource = "precision mediump float;" +
+                                        "uniform sampler2D textureSampler;" +
+                                        "varying vec2 texPosition;" + "void main(){" +
+                                        "     gl_FragColor = texture2D(textureSampler,texPosition);" +
+                                        "" + "" + "}";
+
+                String infoLog = "";
+                int[] framebuffers = new int[1];
+                int[] renderbuffers = new int[1];
+                int[] buffers = new int[2];
+                int[] textures = new int[1];
+                // 纹理缓冲区
+                float[] texPosition = new float[]{
+                        0f, 0f,
+                        1f, 0f,
+                        1f, 1f,
+                        0f, 1f
+                };
+                // 顶点的位置 左上角
+                RectF positionRect = new RectF(-0.8f, 0.8f, 0.8f, -0.8f);
+
+
+                Matrix matrix = new Matrix();
+                matrix.setScale(4,4);
+                matrix.mapRect(positionRect);
+
+                float[] vexPosition = new float[]{
+                        positionRect.left, positionRect.top,
+                        positionRect.right, positionRect.top,
+                        positionRect.right, positionRect.bottom,
+                        positionRect.left, positionRect.bottom
+                };
+
+                while (true) {
+
+                    if (!contextCreated) {
+
+                        EGLDisplay eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
+                        boolean eglInitialize = EGL14.eglInitialize(eglDisplay, null, 0, null, 0);
+
+
+                        int[] config_attrib_list
+                                = new int[]{EGL14.EGL_RED_SIZE, 8, EGL14.EGL_GREEN_SIZE, 8, EGL14.EGL_BLUE_SIZE, 8, EGL14.EGL_ALPHA_SIZE, 8, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT, EGL14.EGL_NONE};
+                        EGLConfig[] eglConfigs = new EGLConfig[1];
+                        boolean eglChooseConfig = EGL14.eglChooseConfig(eglDisplay,
+                                                                        config_attrib_list, 0,
+                                                                        eglConfigs, 0, 1,
+                                                                        new int[eglConfigs.length],
+                                                                        0);
+                        EGLConfig eglConfig = eglConfigs[0];
+                        int[] surface_attrib_list
+                                = new int[]{EGL14.EGL_WIDTH, surfaceWidth, EGL14.EGL_HEIGHT, surfaceHeight, EGL14.EGL_NONE};
+                        EGLSurface eglSurface = EGL14.eglCreatePbufferSurface(eglDisplay, eglConfig,
+                                                                              surface_attrib_list,
+                                                                              0);
+                        int[] context_attrib_list
+                                = new int[]{EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE};
+                        EGLContext eglContext = EGL14.eglCreateContext(eglDisplay, eglConfig,
+                                                                       EGL14.EGL_NO_CONTEXT,
+                                                                       context_attrib_list, 0);
+                        boolean eglMakeCurrent = EGL14.eglMakeCurrent(eglDisplay, eglSurface,
+                                                                      eglSurface, eglContext);
+                        if (eglMakeCurrent) {
+                            contextCreated = true;
+                        } else {
+                            int eglGetError = EGL14.eglGetError();
+                            Lg.d(TAG, "egl 14 error : %d ", eglGetError);
+                        }
+
+
+                        GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight);
+                        program = GLES20.glCreateProgram();
+
+                        int vShaderID = GLES20.glCreateShader(GL_VERTEX_SHADER);
+                        int fShaderID = GLES20.glCreateShader(GL_FRAGMENT_SHADER);
+                        GLES20.glShaderSource(vShaderID, vertexSource);
+
+                        GLES20.glShaderSource(fShaderID, fragmentSource);
+
+                        GLES20.glAttachShader(program, vShaderID);
+                        GLES20.glCompileShader(vShaderID);
+
+                        GLES20.glAttachShader(program, fShaderID);
+                        GLES20.glCompileShader(fShaderID);
+
+                        GLES20.glLinkProgram(program);
+
+                        infoLog = GLES20.glGetProgramInfoLog(program);
+
+                        vexPositionIndex =
+                                GLES20.glGetAttribLocation(program, "vexPosition");
+
+
+                        inputTexturePositionIndex =
+                                GLES20.glGetAttribLocation(program,
+                                                           "inputTexturePosition");
+                        GLES20.glGenFramebuffers(framebuffers.length, framebuffers, 0);
+                        GLES20.glGenRenderbuffers(renderbuffers.length, renderbuffers, 0);
+                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[0]);
+                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER, renderbuffers[0]);
+
+                        GLES20.glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA4, surfaceWidth,
+                                                     surfaceHeight);
+
+                        GLES20.glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                                         GLES20.GL_COLOR_ATTACHMENT0,
+                                                         GL_RENDERBUFFER, renderbuffers[0]);
+                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+
+                        GLES20.glGenBuffers(buffers.length, buffers, 0);
+                        // 顶点缓冲区
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
+
+                        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, vexPosition.length * 4,
+                                            ByteBuffer.allocateDirect(vexPosition.length * 4)
+                                                      .order(ByteOrder.nativeOrder())
+                                                      .asFloatBuffer()
+                                                      .put(vexPosition)
+                                                      .rewind(), GLES20.GL_STATIC_DRAW);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
+
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1]);
+                        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, texPosition.length * 4,
+                                            ByteBuffer.allocateDirect(texPosition.length * 4)
+                                                      .order(ByteOrder.nativeOrder())
+                                                      .asFloatBuffer()
+                                                      .put(texPosition)
+                                                      .rewind(), GLES20.GL_STATIC_DRAW);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
+
+                        GLES20.glEnableVertexAttribArray(vexPositionIndex);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
+                        GLES20.glVertexAttribPointer(vexPositionIndex, 2, GLES20.GL_FLOAT, false, 0,
+                                                     0);
+                        GLES20.glDisableVertexAttribArray(vexPositionIndex);
+
+                        GLES20.glEnableVertexAttribArray(inputTexturePositionIndex);
+                        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1]);
+                        GLES20.glVertexAttribPointer(inputTexturePositionIndex, 2, GLES20.GL_FLOAT,
+                                                     false, 0, 0);
+                        GLES20.glDisableVertexAttribArray(inputTexturePositionIndex);
+
+
+                        GLES20.glGenTextures(textures.length, textures, 0);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+                                               GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+                                               GLES20.GL_MIRRORED_REPEAT);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
+                                               GLES20.GL_LINEAR);
+                        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
+                                               GLES20.GL_LINEAR);
+                        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap, 0);
+
+                        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+                        GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "textureSampler"),
+                                           0);
+
+
+                    } else {
+                        GLES20.glUseProgram(program);
+
+
+                        GLES20.glEnableVertexAttribArray(vexPositionIndex);
+                        GLES20.glEnableVertexAttribArray(inputTexturePositionIndex);
+
+                        GLES20.glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[0]);
+                        GLES20.glBindRenderbuffer(GL_RENDERBUFFER, renderbuffers[0]);
+                        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+                        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, vexPosition.length / 2);
+
+
+                        Buffer pixels = IntBuffer.allocate(surfaceWidth * surfaceHeight);
+                        GLES20.glReadPixels(0, 0, surfaceWidth, surfaceHeight, GLES20.GL_RGBA,
+                                            GLES20.GL_UNSIGNED_BYTE, pixels);
+
+                        Bitmap newBitmap = Bitmap.createBitmap(surfaceWidth, surfaceHeight,
+                                                               Bitmap.Config.ARGB_8888, false);
+                        newBitmap.copyPixelsFromBuffer(pixels.rewind());
+                        GLES20.glDisableVertexAttribArray(vexPositionIndex);
+                        GLES20.glDisableVertexAttribArray(inputTexturePositionIndex);
+
+
+                        try {
+                            Thread.sleep(160);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+        };
+
+        thread.start();
+
+    }
+
+    // 基于 GLSL 的算法
+    public static void 离屏渲染题图正方向居中裁剪_GLSL() {
 
 
     }
@@ -546,6 +801,9 @@ public class OpenGLTest {
 
     }
 
+    public static void 相机旋转() {
+
+    }
 
     public static void 图像处理() {
 
