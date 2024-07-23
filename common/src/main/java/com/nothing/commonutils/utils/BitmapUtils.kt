@@ -27,11 +27,19 @@ object BitmapUtils {
     @Deprecated("获取视频的最大关键帧https://blog.csdn.net/xiaxl/article/details/67637030/?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0--blog-125645981.235^v38^pc_relevant_default_base&spm=1001.2101.3001.4242.1&utm_relevant_index=1")
     const val VIDEO_FRAME = 0L
 
-    fun getVideoThumbFrame(path: String,long: Long = 180,timeUnit: TimeUnit = TimeUnit.MILLISECONDS): Long {
-        return VideoUtils.getVideoDuration(path,long,timeUnit) * 1000 / 2
+    fun getVideoThumbFrame(
+        path: String,
+        long: Long = 180,
+        timeUnit: TimeUnit = TimeUnit.MILLISECONDS
+    ): Long {
+        return VideoUtils.getVideoDuration(path, long, timeUnit) * 1000 / 2
     }
 
-    fun getBitmapSize(contentResolver:ContentResolver,file: Uri,options:BitmapFactory.Options = BitmapFactory.Options()): Size {
+    fun getBitmapSize(
+        contentResolver: ContentResolver,
+        file: Uri,
+        options: BitmapFactory.Options = BitmapFactory.Options()
+    ): Size {
         try {
             options.inJustDecodeBounds = true
             val openInputStream = contentResolver.openInputStream(file)
@@ -51,7 +59,7 @@ object BitmapUtils {
         return getSafeBitmap(context, uri, Int.MAX_VALUE)
     }
 
-    fun viewToBitmap(view: View):Bitmap{
+    fun viewToBitmap(view: View): Bitmap {
         val width = view.measuredWidth
         val height = view.measuredHeight
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
@@ -60,15 +68,16 @@ object BitmapUtils {
         return bitmap
     }
 
-    fun bitmapToBitmap(inputBitmap: Bitmap,outSize:Size):Bitmap{
+    fun bitmapToBitmap(inputBitmap: Bitmap, outSize: Size): Bitmap {
         val createBitmap = Bitmap.createBitmap(outSize.width, outSize.height, inputBitmap.config)
 
         val canvas = Canvas(createBitmap)
 
-        canvas.drawBitmap(inputBitmap,0f,0f,null)
+        canvas.drawBitmap(inputBitmap, 0f, 0f, null)
 
         return createBitmap
     }
+
     fun isTooLarge(bitmap: Bitmap): Boolean {
         return bitmap.byteCount > 99 * 1024 * 1024
     }
@@ -100,7 +109,7 @@ object BitmapUtils {
 
 
     // 分割左右眼
-    fun split3DBitmaps(input3D:Bitmap?): Pair<Bitmap,Bitmap>? {
+    fun split3DBitmaps(input3D: Bitmap?): Pair<Bitmap, Bitmap>? {
         // 确保两个 Bitmap 非空
         if (input3D == null) {
             return null
@@ -110,15 +119,15 @@ object BitmapUtils {
         val dividedWidth = width / 2
         val leftBitmap = Bitmap.createBitmap(input3D, 0, 0, dividedWidth, height)
         val rightBitmap = Bitmap.createBitmap(input3D, dividedWidth, 0, dividedWidth, height)
-        return Pair(leftBitmap,rightBitmap)
+        return Pair(leftBitmap, rightBitmap)
     }
 
 
     /**
      * @return null 代表 分配失败或者是不需要分配
      * */
-    fun alignBitmap(bitmap: Bitmap?,recycleInputBitmap: Boolean = true): Bitmap? {
-        if (bitmap == null){
+    fun alignBitmap(bitmap: Bitmap?, recycleInputBitmap: Boolean = true): Bitmap? {
+        if (bitmap == null) {
             return null;
         }
         val width = bitmap.width
@@ -180,7 +189,7 @@ object BitmapUtils {
     fun getSafeBitmap(context: Context, uri: Uri, maxHeight: Int = Int.MAX_VALUE): Bitmap? {
         var width: Int = 0
         var height: Int = 0
-        var ow: Int =0
+        var ow: Int = 0
         var oh: Int = 0
         var startTime = System.currentTimeMillis()
         val options = BitmapFactory.Options()
@@ -190,7 +199,7 @@ object BitmapUtils {
         var resultHeight: Int = 0
         var resultWidth: Int = 0
         try {
-            val bitmapSize = getBitmapSize(context.contentResolver,uri,options)
+            val bitmapSize = getBitmapSize(context.contentResolver, uri, options)
             newTime = System.currentTimeMillis() - startTime
             width = bitmapSize!!.width
             height = bitmapSize!!.height
@@ -212,8 +221,8 @@ object BitmapUtils {
             }
             // 无论小数点的状态 都向上取值 避免上面对于large的计算失效
             scale = Math.max(1, (oh / height))
-            if ((ow*oh *4) / scale > maxBitmapSize){
-                scale =Math.min(1, (oh / height))
+            if ((ow * oh * 4) / scale > maxBitmapSize) {
+                scale = Math.min(1, (oh / height))
             }
             // 设置为非2的幂时，可能会导致图像质量下降或者性能问题的情况主要有以下几种：
             //
@@ -222,7 +231,7 @@ object BitmapUtils {
             //内存占用增加： 如果 inSampleSize 设置为非2的幂，系统可能需要更多的内存来存储缩小后的图像，因为它们的尺寸可能无法完全利用系统内存的对齐优势。
             //
             //性能下降： 缩放因子不是2的幂可能会导致系统执行更多的计算来调整图像的大小，这可能会增加处理时间，从而导致性能下降，特别是在大型图像上。
-            scale = if(scale == 1) 1 else roundToEven(scale)
+            scale = if (scale == 1) 1 else roundToEven(scale)
             options.inJustDecodeBounds = false
             options.inPreferredConfig = Bitmap.Config.RGB_565
             options.inSampleSize = scale
@@ -233,21 +242,26 @@ object BitmapUtils {
             var decodeBitmap = BitmapFactory.decodeStream(inputStream, null, options) ?: return null
 
             // 格式化  最大的高度
-            if (maxHeight != Int.MAX_VALUE){
-                if (decodeBitmap.height > maxHeight){
+            if (maxHeight != Int.MAX_VALUE) {
+                if (decodeBitmap.height > maxHeight) {
                     var originBitmap = decodeBitmap
-                    decodeBitmap = Bitmap.createScaledBitmap(decodeBitmap,
-                        ((decodeBitmap.width.toFloat() * maxHeight )/decodeBitmap.height.toFloat()).toInt(),
-                        maxHeight,false)
+                    decodeBitmap = Bitmap.createScaledBitmap(
+                        decodeBitmap,
+                        ((decodeBitmap.width.toFloat() * maxHeight) / decodeBitmap.height.toFloat()).toInt(),
+                        maxHeight, false
+                    )
                     originBitmap.recycle()
                 }
             }
 
             val currentTimeMillis = System.currentTimeMillis()
-            var alignBitmap  = alignBitmap(decodeBitmap)
-            if (alignBitmap != null){
+            var alignBitmap = alignBitmap(decodeBitmap)
+            if (alignBitmap != null) {
                 decodeBitmap = alignBitmap
-                Lg.d(TAG,"align bitmap time cost:${System.currentTimeMillis() - currentTimeMillis}ms")
+                Lg.d(
+                    TAG,
+                    "align bitmap time cost:${System.currentTimeMillis() - currentTimeMillis}ms"
+                )
             }
 
 
@@ -255,12 +269,15 @@ object BitmapUtils {
             resultHeight = decodeBitmap.height
 
             return decodeBitmap.also {
-                if (isTooLarge(it)){
-                    Lg.e(TAG, "获取bitmap太大了,${FileUtils.formatFileSize(it.byteCount.toLong())},${uri}")
+                if (isTooLarge(it)) {
+                    Lg.e(
+                        TAG,
+                        "获取bitmap太大了,${FileUtils.formatFileSize(it.byteCount.toLong())},${uri}"
+                    )
                 }
                 try {
                     inputStream?.close()
-                    bitmapSizeString = FileUtils.formatFileSize(it?.byteCount?.toLong()?:0)
+                    bitmapSizeString = FileUtils.formatFileSize(it?.byteCount?.toLong() ?: 0)
                 } catch (e: Throwable) {
                     e.printStackTrace()
                 }
@@ -270,7 +287,7 @@ object BitmapUtils {
 //                .diskCacheStrategy(DiskCacheStrategy.NONE).skipMemoryCache(true)
 //                .submit(width.toInt(), height.toInt()).get()
 
-        //            var mDecoder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            //            var mDecoder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 //                BitmapRegionDecoder.newInstance(inputStream!!)
 //            } else {
 //                BitmapRegionDecoder.newInstance(inputStream!!,false)
@@ -299,9 +316,10 @@ object BitmapUtils {
         }
         return null
     }
-// 压缩改为100
+
+    // 压缩改为100
     fun encode(
-        bitmap: Bitmap, file: File,  quality: Int = 100
+        bitmap: Bitmap, file: File, quality: Int = 100
     ): Boolean {
         var startTime = System.currentTimeMillis()
         val format: CompressFormat = getFormat(bitmap)
@@ -327,7 +345,12 @@ object BitmapUtils {
             return success
         } finally {
 
-            Log.d(TAG, "保存文件到本地:${file.path} ${System.currentTimeMillis() - startTime}ms (${bitmap.width}:${bitmap.height})大小：${FileUtils.formatFileSize(file.length())}")
+            Log.d(
+                TAG,
+                "保存文件到本地:${file.path} ${System.currentTimeMillis() - startTime}ms (${bitmap.width}:${bitmap.height})大小：${
+                    FileUtils.formatFileSize(file.length())
+                }"
+            )
         }
     }
 
@@ -337,5 +360,9 @@ object BitmapUtils {
         } else {
             CompressFormat.JPEG
         }
+    }
+
+    fun bitmapToFile(bitmap: Bitmap, file: File): Boolean {
+        return bitmap.compress(Bitmap.CompressFormat.JPEG, 100, FileOutputStream(file))
     }
 }

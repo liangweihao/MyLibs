@@ -22,6 +22,15 @@ public class RefInvoke {
 
     private static final String TAG = "RefInvoke";
 
+
+
+    public static Class<?> getClass(String name){
+        try {
+            return Class.forName(name);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
     /**
      * 根据类名 反射无参构造函数 获取实例
      *
@@ -38,16 +47,6 @@ public class RefInvoke {
             e.printStackTrace();
         }
         return null;
-    }
-    @Nullable
-    public static Class getClass(String className){
-        Class<?> aClass = null;
-        try {
-            aClass = Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        return aClass;
     }
 
 
@@ -101,11 +100,26 @@ public class RefInvoke {
                                               String methodName,
                                               Class[] paramTypes,
                                               Object[] paramValues) {
+        return invokeInstanceMethod(obj,obj.getClass(),methodName,paramTypes,paramValues);
+    }
+
+
+    public static Object invokeInstanceMethod(Object obj,
+                                              Class<?> className,
+                                              String methodName,
+                                              Class[] paramTypes,
+                                              Object[] paramValues) {
         if (obj == null) {
             return null;
         }
         try {
-            Method method = obj.getClass().getDeclaredMethod(methodName, paramTypes);
+            Method method;
+            try{
+                method = className.getDeclaredMethod(methodName, paramTypes);
+            }catch (Throwable e){
+                e.printStackTrace();
+                method = className.getMethod(methodName, paramTypes);
+            }
             method.setAccessible(true);
             return method.invoke(obj, paramValues);
         } catch (Exception e) {
@@ -113,6 +127,7 @@ public class RefInvoke {
         }
         return null;
     }
+
 
     public static <O> Object invokeInstanceMethod(Object obj,
                                                   String methodName,
@@ -239,7 +254,7 @@ public class RefInvoke {
         try {
             Class<?> targetClass = Class.forName(targetClassName);
             Object cast = targetClass.cast(Proxy.newProxyInstance(targetClass.getClassLoader(),
-                    new Class[]{targetClass}, invokeHandler));
+                                                                  new Class[]{targetClass}, invokeHandler));
             return new Pair<>(targetClass, cast);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -259,7 +274,7 @@ public class RefInvoke {
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             try {
                 Method foundMethod = outProxy.getClass().getMethod(method.getName(),
-                        method.getParameterTypes());
+                                                                   method.getParameterTypes());
                 foundMethod.setAccessible(true);
                 return foundMethod.invoke(outProxy, args);
             } catch (Exception e) {
@@ -270,22 +285,26 @@ public class RefInvoke {
     }
 
 
-    public static Object getEnum(Class<?> clazz, String name){
-//name = "CLICK"
-//ordinal = 0
-        Object[] enumConstants = clazz.getEnumConstants();
-        if (enumConstants == null){
+    @Nullable
+    public static Object getEnum(@Nullable Class<?> enumClass, String enumName ) {
+
+        if (enumClass == null){
             return null;
         }
-        for (Object constant : enumConstants) {
-            if (constant instanceof Enum) {
-                if (((Enum<?>) constant).name().equals(name)) {
+        // 获取枚举类的所有常量
+        Object[] enumConstants = enumClass.getEnumConstants();
+        // 查找特定的枚举常量
+        if (enumConstants != null) {
+            for (Object constant : enumConstants) {
+                if (constant.toString().equals(enumName)) {
                     return constant;
                 }
             }
         }
+
         return null;
     }
+
 
 //    单单注解 某个接口或者是父类还不行 实例的对象又不能充分满足 所以放弃
 //    @Retention(RetentionPolicy.RUNTIME)

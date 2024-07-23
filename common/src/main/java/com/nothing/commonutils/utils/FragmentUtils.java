@@ -11,6 +11,7 @@ import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
 
@@ -102,6 +103,14 @@ public class FragmentUtils {
         });
     }
 
+    public static boolean checkRootFragmentAndFinish(FragmentActivity activity){
+        if (activity.getSupportFragmentManager().getBackStackEntryCount() == 0 &&
+            !activity.isFinishing()){
+            activity.finish();
+            return true;
+        }
+        return false;
+    }
     public static boolean findTag(FragmentManager fragmentManager,String tag){
         return fragmentManager.findFragmentByTag(tag) != null;
     }
