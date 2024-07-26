@@ -18,7 +18,10 @@ import androidx.lifecycle.LifecycleOwner;
 public class FragmentUtils {
 
     private static final String TAG = "FragmentUtils";
-    public static void remove(FragmentManager fragmentManager, LifecycleOwner lifecycle, Fragment fragment){
+
+    public static void remove(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, Fragment fragment
+    ) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
             @Override
             public void run() {
@@ -34,7 +37,7 @@ public class FragmentUtils {
 
     }
 
-    public static void popBackStack(FragmentManager fragmentManager, LifecycleOwner lifecycle){
+    public static void popBackStack(FragmentManager fragmentManager, LifecycleOwner lifecycle) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
             @Override
             public void run() {
@@ -50,14 +53,16 @@ public class FragmentUtils {
     }
 
 
-    public static void replace(FragmentManager fragmentManager,LifecycleOwner lifecycle,@IdRes int containerViewId, @NonNull Fragment fragment,
-                               @Nullable String tag){
+    public static void replace(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, @IdRes int containerViewId,
+            @NonNull Fragment fragment, @Nullable String tag
+    ) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
             @Override
             public void run() {
-                Try.catchSelf(() -> fragmentManager.beginTransaction().replace(containerViewId,
-                        fragment,
-                        tag).commit());
+                Try.catchSelf(() -> fragmentManager.beginTransaction()
+                                                   .replace(containerViewId, fragment, tag)
+                                                   .commit());
 
             }
 
@@ -68,31 +73,16 @@ public class FragmentUtils {
         });
     }
 
-    public static void addPop(FragmentManager fragmentManager,LifecycleOwner lifecycle,@IdRes int containerViewId, @NonNull Fragment fragment,
-                                     @Nullable String tag){
+    public static void addFragment(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, @IdRes int containerViewId,
+            @NonNull Fragment fragment, String tag
+    ) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
             @Override
             public void run() {
-                Try.catchSelf(() -> fragmentManager.beginTransaction().add(containerViewId,
-                        fragment,
-                        tag).addToBackStack(tag).commit());
-
-            }
-
-            @Override
-            public void dispose() {
-
-            }
-        });
-    }
-    public static void replaceAddPop(FragmentManager fragmentManager,LifecycleOwner lifecycle,@IdRes int containerViewId, @NonNull Fragment fragment,
-                               @Nullable String tag){
-        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
-            @Override
-            public void run() {
-                Try.catchSelf(() -> fragmentManager.beginTransaction().replace(containerViewId,
-                        fragment,
-                        tag).addToBackStack(tag).commit());
+                Try.catchSelf(() -> fragmentManager.beginTransaction()
+                                                   .add(containerViewId, fragment, tag)
+                                                   .commit());
 
             }
 
@@ -103,41 +93,87 @@ public class FragmentUtils {
         });
     }
 
-    public static boolean checkRootFragmentAndFinish(FragmentActivity activity){
+    public static void addPop(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, @IdRes int containerViewId,
+            @NonNull Fragment fragment, @Nullable String tag
+    ) {
+        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
+            @Override
+            public void run() {
+                Try.catchSelf(() -> fragmentManager.beginTransaction()
+                                                   .add(containerViewId, fragment, tag)
+                                                   .addToBackStack(tag)
+                                                   .commit());
+
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        });
+    }
+
+    public static void replaceAddPop(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, @IdRes int containerViewId,
+            @NonNull Fragment fragment, @Nullable String tag
+    ) {
+        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
+            @Override
+            public void run() {
+                Try.catchSelf(() -> fragmentManager.beginTransaction()
+                                                   .replace(containerViewId, fragment, tag)
+                                                   .addToBackStack(tag)
+                                                   .commit());
+
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        });
+    }
+
+
+    public static boolean checkRootFragmentAndFinish(FragmentActivity activity) {
         if (activity.getSupportFragmentManager().getBackStackEntryCount() == 0 &&
-            !activity.isFinishing()){
+            !activity.isFinishing()) {
             activity.finish();
             return true;
         }
         return false;
     }
-    public static boolean findTag(FragmentManager fragmentManager,String tag){
+
+    public static boolean findTag(FragmentManager fragmentManager, String tag) {
         return fragmentManager.findFragmentByTag(tag) != null;
     }
+
     private static Handler handler = new Handler(Looper.getMainLooper());
-    public static void printFragment(FragmentManager fragmentManager){
-        Lg.d(TAG,"printFragment " + fragmentManager);
+
+    public static void printFragment(FragmentManager fragmentManager) {
+        Lg.d(TAG, "printFragment " + fragmentManager);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                try{
+                try {
                     for (Fragment fragment : fragmentManager.getFragments()) {
-                        Lg.d(TAG,"fragment entry " + fragment);
+                        Lg.d(TAG, "fragment entry " + fragment);
 
                     }
 
                     for (int i = 0; i < fragmentManager.getBackStackEntryCount(); i++) {
-                        FragmentManager.BackStackEntry backStackEntryAt = fragmentManager.getBackStackEntryAt(
-                                i);
+                        FragmentManager.BackStackEntry backStackEntryAt
+                                = fragmentManager.getBackStackEntryAt(i);
 
-                        Lg.d(TAG,"back entry " + backStackEntryAt);
+                        Lg.d(TAG, "back entry " + backStackEntryAt);
                     }
-                }catch (Throwable e){
+                } catch (Throwable e) {
                     e.printStackTrace();
                 }
 
             }
-        },0);
+        }, 0);
 
     }
 }
