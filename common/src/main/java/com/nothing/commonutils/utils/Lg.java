@@ -30,19 +30,19 @@ public class Lg {
             } catch (Throwable e) {
 
             }
-            String msg = buildStack() + format;
-            Log.d(tag, msg);
-            saveLogToFile(tag + "(D)", msg);
+            Log.d(tag, buildStack() + format);
+            saveLogToFile(tag + "(D)", buildStack(true) +  format);
         }
     }
-
     public static String buildStack() {
-        if (!BuildStackInfo) {
+        return buildStack(false);
+    }
+    public static String buildStack(boolean forceBuild) {
+        if (!BuildStackInfo && !forceBuild) {
             return "";
         }
         try {
             StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-
             return Thread.currentThread().getName() + "- (" + stackTrace[2].getFileName() + ":" + stackTrace[2].getLineNumber() + ") ";
         } catch (Throwable e) {
             return "";
@@ -56,9 +56,8 @@ public class Lg {
                 format = String.format(message, args);
             } catch (Throwable e) {
             }
-            String msg = buildStack() + format;
-            Log.e(tag, msg);
-            saveLogToFile(tag + "(E)", msg);
+            Log.e(tag,  buildStack() + format);
+            saveLogToFile(tag + "(E)",  buildStack(true) + format);
         }
     }
 
@@ -69,9 +68,8 @@ public class Lg {
                 format = String.format(message, args);
             } catch (Throwable e) {
             }
-            String msg = buildStack() + format;
-            Log.w(tag, msg);
-            saveLogToFile(tag + "(W)", msg);
+            Log.w(tag, buildStack() + format);
+            saveLogToFile(tag + "(W)", buildStack(true) + format);
         }
     }
 
@@ -82,9 +80,8 @@ public class Lg {
                 format = String.format(message, args);
             } catch (Throwable e) {
             }
-            String msg = buildStack() + format;
-            Log.i(tag, msg);
-            saveLogToFile(tag + "(I)", msg);
+            Log.i(tag, buildStack() + format);
+            saveLogToFile(tag + "(I)", buildStack(true) + format);
         }
     }
 
@@ -101,7 +98,7 @@ public class Lg {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", Locale.getDefault());
             String timestamp = sdf.format(new Date());
 
-            String fileName = timestamp + "app_logs_.txt";
+            String fileName = timestamp + "_app_logs.txt";
             File file = new File(context.getExternalCacheDir(), fileName);
             if (!file.exists()) {
                 boolean newFile = file.createNewFile();

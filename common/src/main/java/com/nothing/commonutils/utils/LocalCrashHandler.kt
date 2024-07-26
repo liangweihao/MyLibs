@@ -17,6 +17,12 @@ import java.io.StringWriter
 class LocalCrashHandler(private val context: Context) : Thread.UncaughtExceptionHandler {
 
     private val TAG = "LocalCrashHandler"
+
+    init {
+
+        Lg.i(TAG,"init local crash handler suc!")
+    }
+
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
         // 保存崩溃信息到本地
         saveCrashInformation(throwable)

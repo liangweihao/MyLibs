@@ -6,12 +6,13 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import com.nothing.commonutils.utils.Lg
-
+import com.nothing.commonutils.utils.LocalCrashHandler
 
 
 class InitProvider:ContentProvider() {
     override fun onCreate():Boolean {
         Lg.init(context)
+        Thread.setDefaultUncaughtExceptionHandler(LocalCrashHandler(context!!))
         return true
     }
 
