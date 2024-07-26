@@ -59,17 +59,17 @@ public class ScreenCapture implements OnScreenShareCallback {
         this.displayInfo = iDisplayInfo;
     }
 
-    public void createVirtualDisplay(boolean z, int i, int i2) {
-        this.mEncoder.createVirtualDisplay(z, i, i2);
+    public void createVirtualDisplay(boolean isDesktop, int width, int height) {
+        this.mEncoder.createVirtualDisplay(isDesktop, width, height);
     }
 
-    public void startCapture(boolean z) {
-        this.mEncoder.startCapture(z);
+    public void startCapture(boolean isDesktop) {
+        this.mEncoder.startCapture(isDesktop);
     }
 
-    public void stopCapture(boolean z) {
-        if (!isDesktop() || z) {
-            stopCaptureForce(z);
+    public void stopCapture(boolean forceStop) {
+        if (!isDesktop() || forceStop) {
+            stopCaptureForce(forceStop);
         }
     }
 
@@ -89,20 +89,20 @@ public class ScreenCapture implements OnScreenShareCallback {
         return null;
     }
 
-    public void stopCaptureForce(boolean z) {
-        this.mEncoder.stopCapture(z);
+    public void stopCaptureForce(boolean forceStop) {
+        this.mEncoder.stopCapture(forceStop);
         List<byte[]> list = bufferList;
         if (list != null) {
             list.clear();
         }
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public void resetCapture(boolean z) {
         this.mEncoder.resetCapture(z);
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public void resetCapture(boolean z, CodecParameter codecParameter) {
         this.mEncoder.resetCapture(z, codecParameter);
     }
@@ -146,12 +146,12 @@ public class ScreenCapture implements OnScreenShareCallback {
         return this.mEncoder.isDesktop();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public boolean isRotated() {
         return this.mEncoder.isRotated();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public int getRecordOrientation() {
         return this.mEncoder.getRecordOrientation();
     }
@@ -168,27 +168,27 @@ public class ScreenCapture implements OnScreenShareCallback {
         return this.mEncoder.getDisplaySize();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public Point getRecordSize() {
         return this.mEncoder.getRecordSize();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public boolean getReseted() {
         return this.mEncoder.getReseted();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public void rotateAndResetCapture(boolean z) {
         this.mEncoder.rotateAndResetCapture(z);
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public long getTotalFrames() {
         return this.mEncoder.getTotalFrames();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public long getDiscardFrames() {
         return this.mEncoder.getDiscardFrames();
     }
@@ -201,12 +201,12 @@ public class ScreenCapture implements OnScreenShareCallback {
         this.mEncoder.resumeDesktop();
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public void setRotated(boolean z) {
         this.mEncoder.setRotated(z);
     }
 
-    /* JADX INFO: Access modifiers changed from: package-private */
+    
     public void setReseted(boolean z) {
         this.mEncoder.setReseted(z);
     }
@@ -229,12 +229,12 @@ public class ScreenCapture implements OnScreenShareCallback {
         this.mEncoder.setCaptureListener(iCaptureStatusListener);
     }
 
-    @Override // com.nothing.commonutils.utils.mediacodec.interfaces.OnScreenShareCallback
+    @Override 
     public void onH264Info(byte[] bArr, boolean isKeyFrame) {
         bufferList.add(bArr);
     }
 
-    @Override // com.nothing.commonutils.utils.mediacodec.interfaces.OnScreenShareCallback
+    @Override  
     public long onClearNeeded(int totalFrameCount, int keyFrameCount) {
         BaseMediaEncoder baseMediaEncoder;
         if ((totalFrameCount > 0 || keyFrameCount > 0) && (baseMediaEncoder = this.mEncoder) != null &&

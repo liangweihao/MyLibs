@@ -46,7 +46,7 @@ public abstract class BaseMediaEncoder {
     protected AtomicBoolean mPauseDesktop = new AtomicBoolean(false);
     protected AtomicBoolean mPictureGot = new AtomicBoolean(false);
 
-    protected abstract void createDesktopVirtualDisplay(int i, int i2);
+    protected abstract void createDesktopVirtualDisplay(int width, int height);
 
     protected abstract void createScreenshotVirtualDisplay(int i, int i2);
 
@@ -56,25 +56,27 @@ public abstract class BaseMediaEncoder {
 
     public abstract void openBlackScreen(boolean z);
 
-     public void postAcquireLatestImage() {
+    public void postAcquireLatestImage() {
     }
+
     private ExecutorService executorService;
-     private HandlerThread handlerThread;
+    private HandlerThread handlerThread;
+
     public BaseMediaEncoder() {
 
         handlerThread = new HandlerThread("AsyncHandler");
         handlerThread.start();
-        this.mHandler = new Handler(handlerThread.getLooper());
+        this.mHandler   = new Handler(handlerThread.getLooper());
         executorService = Executors.newFixedThreadPool(3);
     }
 
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        try{
+        try {
             executorService.shutdownNow();
             handlerThread.quit();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
@@ -82,7 +84,7 @@ public abstract class BaseMediaEncoder {
     protected abstract void recordVirtualDisplay(boolean z) throws RuntimeException;
 
     public void init(IDisplayInfo iDisplayInfo, ManagerMediaProjection managerMediaProjection) {
-        this.mDisplayInfo = iDisplayInfo;
+        this.mDisplayInfo           = iDisplayInfo;
         this.managerMediaProjection = managerMediaProjection;
     }
 
@@ -97,16 +99,16 @@ public abstract class BaseMediaEncoder {
         this.listener = iCaptureStatusListener;
     }
 
-    public void createVirtualDisplay(boolean z, int i, int i2) {
+    public void createVirtualDisplay(boolean isDesktop, int width, int height) {
         ManagerMediaProjection managerMediaProjection = this.managerMediaProjection;
         if (managerMediaProjection != null && managerMediaProjection.hasMediaProjection()) {
             MediaProjection mediaProjection = this.managerMediaProjection.getMediaProjection();
             this.mMediaProjection = mediaProjection;
             if (mediaProjection != null) {
-                this.mRecordSize = new Point(i, i2);
+                this.mRecordSize        = new Point(width, height);
                 this.mRecordOrientation = getDisplayOrientation();
-                MediaProjection.Callback callback = new MediaProjection.Callback() { // from class: com.nothing.commonutils.utils.mediacodec.BaseMediaEncoder.1
-                    @Override // android.media.projection.MediaProjection.Callback
+                MediaProjection.Callback callback = new MediaProjection.Callback() {
+                    @Override
                     public void onStop() {
                         super.onStop();
                         Lg.d(TAG, "MediaProjection callback stop");
@@ -115,23 +117,24 @@ public abstract class BaseMediaEncoder {
                 };
                 this.mCallback = callback;
                 this.mMediaProjection.registerCallback(callback, mHandler);
-                if (z) {
+                if (isDesktop) {
                     onStartCallback();
                 }
                 if (isUseEgl()) {
-                    createDesktopVirtualDisplay(i, i2);
+                    createDesktopVirtualDisplay(width, height);
                     return;
                 }
-                if (z) {
-                    createDesktopVirtualDisplay(i, i2);
+                if (isDesktop) {
+                    createDesktopVirtualDisplay(width, height);
                 }
-                createScreenshotVirtualDisplay(i, i2);
+                createScreenshotVirtualDisplay(width, height);
                 return;
             }
         }
         ICaptureStatusListener iCaptureStatusListener = this.listener;
         if (iCaptureStatusListener != null) {
-            iCaptureStatusListener.onCaptureStatusChanged(2, ICaptureStatusListener.GET_MEDIA_PROJECTION_ERROR);
+            iCaptureStatusListener.onCaptureStatusChanged(2,
+                                                          ICaptureStatusListener.GET_MEDIA_PROJECTION_ERROR);
         }
     }
 
@@ -140,7 +143,8 @@ public abstract class BaseMediaEncoder {
         doCapture(isDesktop);
         ICaptureStatusListener iCaptureStatusListener = this.listener;
         if (iCaptureStatusListener != null) {
-            iCaptureStatusListener.onCaptureStatusChanged(0, ICaptureStatusListener.PREPARE_START_CAPTURE_SCREEN);
+            iCaptureStatusListener.onCaptureStatusChanged(0,
+                                                          ICaptureStatusListener.PREPARE_START_CAPTURE_SCREEN);
         }
     }
 
@@ -154,7 +158,7 @@ public abstract class BaseMediaEncoder {
     }
 
 
-    public  void starCaptureRecorderIfNotRunnning(boolean isDesktop) {
+    public void starCaptureRecorderIfNotRunnning(boolean isDesktop) {
         if (isRunning()) {
             return;
         }
@@ -180,7 +184,8 @@ public abstract class BaseMediaEncoder {
             try {
                 if (getCodecUtils().prepareEncode()) {
                     if (this.managerMediaProjection != null) {
-                        createVirtualDisplay(isDesktop, codecParameter.getRecordWidth(), codecParameter.getRecordHeight());
+                        createVirtualDisplay(isDesktop, codecParameter.getRecordWidth(),
+                                             codecParameter.getRecordHeight());
                         recordVirtualDisplay(isDesktop);
                     } else {
                         Lg.e(TAG, "MediaProjection is null ");
@@ -196,7 +201,8 @@ public abstract class BaseMediaEncoder {
                 if (i >= 3) {
                     ICaptureStatusListener iCaptureStatusListener = this.listener;
                     if (iCaptureStatusListener != null) {
-                        iCaptureStatusListener.onCaptureStatusChanged(4, ICaptureStatusListener.FAIL_TO_CAPTURE_SCREEN);
+                        iCaptureStatusListener.onCaptureStatusChanged(4,
+                                                                      ICaptureStatusListener.FAIL_TO_CAPTURE_SCREEN);
                     }
                     release();
                 }
@@ -207,9 +213,9 @@ public abstract class BaseMediaEncoder {
         } while (!this.mForceQuit.get());
     }
 
-    public void stopCapture(boolean z) {
+    public void stopCapture(boolean forceStop) {
         this.acquireLatestImage = false;
-        if (z) {
+        if (forceStop) {
             stopCapture();
         } else if (isDesktop()) {
         } else {
@@ -294,7 +300,8 @@ public abstract class BaseMediaEncoder {
         StringBuilder sb = new StringBuilder();
         sb.append("getDisplayOrientation>>>>>>");
         IDisplayInfo iDisplayInfo = this.mDisplayInfo;
-        sb.append(iDisplayInfo == null ? "mDisplayInfo  isEmpty" : Integer.valueOf(iDisplayInfo.getOrientation()));
+        sb.append(iDisplayInfo == null ? "mDisplayInfo  isEmpty" : Integer.valueOf(
+                iDisplayInfo.getOrientation()));
         Lg.i(str, sb.toString());
         IDisplayInfo iDisplayInfo2 = this.mDisplayInfo;
         if (iDisplayInfo2 != null) {
@@ -321,7 +328,8 @@ public abstract class BaseMediaEncoder {
     }
 
     public boolean isRotated() {
-        return (this.mRecordOrientation == -1 || getDisplayOrientation() == this.mRecordOrientation) ? false : true;
+        return (this.mRecordOrientation == -1 ||
+                getDisplayOrientation() == this.mRecordOrientation) ? false : true;
     }
 
     public void setRotated(boolean z) {
@@ -360,14 +368,19 @@ public abstract class BaseMediaEncoder {
         if (this.mCodecParameter == null) {
             this.mCodecParameter = initCodecParameter();
         }
-        boolean checkOrientation = checkOrientation(this.mCodecParameter.getRecordWidth(), this.mCodecParameter.getRecordHeight());
+        boolean checkOrientation = checkOrientation(this.mCodecParameter.getRecordWidth(),
+                                                    this.mCodecParameter.getRecordHeight());
         CodecParameter codecParameter = this.mCodecParameter;
-        int recordWidth = checkOrientation ? codecParameter.getRecordWidth() : codecParameter.getRecordHeight();
+        int recordWidth
+                = checkOrientation ? codecParameter.getRecordWidth() : codecParameter.getRecordHeight();
         CodecParameter codecParameter2 = this.mCodecParameter;
-        int recordHeight = checkOrientation ? codecParameter2.getRecordHeight() : codecParameter2.getRecordWidth();
+        int recordHeight
+                = checkOrientation ? codecParameter2.getRecordHeight() : codecParameter2.getRecordWidth();
         CodecParameter codecParameter3 = this.mCodecParameter;
-        int displayWidth = checkOrientation ? codecParameter3.getDisplayWidth() : codecParameter3.getDisplayHeight();
-        int displayHeight = checkOrientation ? this.mCodecParameter.getDisplayHeight() : this.mCodecParameter.getDisplayWidth();
+        int displayWidth
+                = checkOrientation ? codecParameter3.getDisplayWidth() : codecParameter3.getDisplayHeight();
+        int displayHeight
+                = checkOrientation ? this.mCodecParameter.getDisplayHeight() : this.mCodecParameter.getDisplayWidth();
         this.mCodecParameter.setRecordWidth(recordWidth);
         this.mCodecParameter.setRecordHeight(recordHeight);
         this.mCodecParameter.setDisplayWidth(displayWidth);
@@ -395,7 +408,8 @@ public abstract class BaseMediaEncoder {
 
     protected boolean checkOrientation(int i, int i2) {
         Point displaySize = getDisplaySize();
-        return (displaySize.x > displaySize.y && i > i2) || (displaySize.x < displaySize.y && i < i2);
+        return (displaySize.x > displaySize.y && i > i2) ||
+               (displaySize.x < displaySize.y && i < i2);
     }
 
     /* JADX INFO: Access modifiers changed from: private */

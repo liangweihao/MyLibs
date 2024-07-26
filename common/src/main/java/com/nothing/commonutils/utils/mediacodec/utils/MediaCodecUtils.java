@@ -71,9 +71,8 @@ public class MediaCodecUtils {
                 Lg.e(str, "prepareStartEncoder exception " + e.getMessage());
             }
         }
-        MediaCodec createEncoderByType = MediaCodec.createEncoderByType("video/avc");
-        this.mEncoder = createEncoderByType;
-        createEncoderByType.configure(mediaFormat, (Surface) null, (MediaCrypto) null, 1);
+        this.mEncoder = MediaCodec.createEncoderByType("video/avc");
+        this.mEncoder.configure(mediaFormat, (Surface) null, (MediaCrypto) null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         this.mSurface = this.mEncoder.createInputSurface();
         this.mEncoder.start();
         Lg.i(TAG, "Encoder start");
@@ -165,7 +164,7 @@ public class MediaCodecUtils {
                 } else {
                     byteBuffer.get(bArr, 0, this.mBufferInfo.size);
                 }
-             }
+            }
             OnScreenShareCallback onScreenShareCallback2 = this.mOnScreenCallBack;
             if (onScreenShareCallback2 != null) {
                 onScreenShareCallback2.onH264Info(bArr, isKeyFrame);
