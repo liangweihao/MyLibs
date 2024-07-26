@@ -1,0 +1,81 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id "org.jetbrains.kotlin.kapt"
+    id 'maven-publish'
+}
+
+
+
+
+afterEvaluate {
+    publishing {
+        publications {
+            maven2(MavenPublication) {
+                groupId = 'com.inair.inaircommon'
+                artifactId = 'inaircommon'
+                version = '1.0.1-SNAPSHOT'
+            }
+        }
+        repositories {
+            maven {
+                url = 'https://packages.aliyun.com/maven/repository/2236604-release-GJXgei/'
+                credentials {
+                    username = '5f963d8b18c17e7748e21932'
+                    password = 'GrkJhRnBbJ_S'
+                }
+            }
+            maven {
+                url = 'https://packages.aliyun.com/maven/repository/2236604-snapshot-ykFnBh/'
+                credentials {
+                    username = '5f963d8b18c17e7748e21932'
+                    password = 'GrkJhRnBbJ_S'
+                }
+            }
+        }
+    }
+}
+android {
+    compileSdk configCompileSDK
+    namespace 'com.inair.inaircommon'
+    defaultConfig {
+        minSdk configMinSDK
+        targetSdk configTargetSDK
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        phone{
+            minifyEnabled false
+            debuggable true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility javaSDK
+        targetCompatibility javaSDK
+    }
+
+    buildFeatures {
+        dataBinding = true
+        buildConfig true
+    }
+
+}
+
+dependencies {
+
+implementation 'androidx.fragment:fragment-ktx:1.8.2'
+    implementation project(':common')
+}
+
+
+
