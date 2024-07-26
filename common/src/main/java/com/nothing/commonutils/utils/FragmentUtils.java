@@ -93,6 +93,39 @@ public class FragmentUtils {
         });
     }
 
+    public static void hide(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, Fragment fragment
+    ) {
+        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
+            @Override
+            public void run() {
+                Try.catchSelf(() -> fragmentManager.beginTransaction().hide(fragment).commit());
+
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        });
+    }
+
+    public static void show(
+            FragmentManager fragmentManager, LifecycleOwner lifecycle, Fragment fragment
+    ) {
+        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
+            @Override
+            public void run() {
+                Try.catchSelf(() -> fragmentManager.beginTransaction().show(fragment).commit());
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        });
+    }
+
     public static void addPop(
             FragmentManager fragmentManager, LifecycleOwner lifecycle, @IdRes int containerViewId,
             @NonNull Fragment fragment, @Nullable String tag
