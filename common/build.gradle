@@ -84,6 +84,13 @@ android {
     }
 
     buildTypes {
+        phone{
+            minifyEnabled false
+            debuggable true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -131,6 +138,19 @@ dependencies {
 //    https://m3.material.io/ MD设计组建
     // https://www.figma.com/file/apE1I6SUXCsfjAxPtpROWp/Material-3-Design-Kit-(Community)?node-id=11%3A1833 figma 设计规范
 
+
+
+    // jik
+    implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-armv5:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-x86:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.8.8'
+    implementation 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.8'
+
+    // opencv
+    implementation group: 'org.opencv', name: 'opencv', version: '4.10.0-kleidicv'
 }
 
 
