@@ -43,7 +43,7 @@ public class Lg {
         }
         try {
             StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-            return Thread.currentThread().getName() + "- (" + stackTrace[2].getFileName() + ":" + stackTrace[2].getLineNumber() + ") ";
+            return Thread.currentThread().getName() + "- (" + stackTrace[3].getFileName() + ":" + stackTrace[3].getLineNumber() + ") ";
         } catch (Throwable e) {
             return "";
         }

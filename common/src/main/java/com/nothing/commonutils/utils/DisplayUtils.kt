@@ -10,7 +10,7 @@ import android.view.View
 import androidx.fragment.app.FragmentActivity
 
 
-public class DisplayUtils {
+public object DisplayUtils {
     fun Float.dp2px(): Float = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP, this, Resources.getSystem().displayMetrics)
 
