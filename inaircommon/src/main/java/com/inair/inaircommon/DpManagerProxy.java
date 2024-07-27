@@ -240,7 +240,7 @@ public class DpManagerProxy {
     }
 
     @Nullable
-    private static Object createChannelDataInstance() {
+    public static Object createChannelDataInstance() {
         return RefInvoke.invokeStaticMethod(CLASS_CHANNEL_DATA, "createInstance", null, null);
     }
 
@@ -271,7 +271,7 @@ public class DpManagerProxy {
 
 
     @Nullable
-    private static Object proxyDPManagerListener(IDpMangerListenerProxy proxy) {
+    public static Object proxyDPManagerListener(IDpMangerListenerProxy proxy) {
         Pair<Class<?>, Object> instance = RefInvoke.proxyTargetClassInstance(
                 CLASS_DP_MANAGER_LISTENER,
                 new RefInvoke.InvokeHandler(proxy));
@@ -334,7 +334,7 @@ public class DpManagerProxy {
         }
     }
 
-    private static void setAction(@Nullable Object obj, int action) {
+    public static void setAction(@Nullable Object obj, int action) {
         if (obj != null) {
             RefInvoke.invokeInstanceMethod(obj,
                     "setAction",
@@ -343,7 +343,7 @@ public class DpManagerProxy {
         }
     }
 
-    private static int getAction(@Nullable Object obj) {
+    public static int getAction(@Nullable Object obj) {
         if (obj != null) {
             return (int) RefInvoke.invokeInstanceMethod(obj,
                     "getAction",
@@ -354,7 +354,7 @@ public class DpManagerProxy {
     }
 
 
-    private static void putString(@Nullable Object obj, String action) {
+    public static void putString(@Nullable Object obj, String action) {
         if (obj != null) {
             RefInvoke.invokeInstanceMethod(obj,
                     "putString",
@@ -363,7 +363,7 @@ public class DpManagerProxy {
         }
     }
 
-    private static void putInt(@Nullable Object obj, int action) {
+    public static void putInt(@Nullable Object obj, int action) {
         if (obj != null) {
             RefInvoke.invokeInstanceMethod(obj,
                     "putInt",
@@ -372,7 +372,7 @@ public class DpManagerProxy {
         }
     }
 
-    private static void setBundle(@Nullable Object obj, Bundle action) {
+    public static void setBundle(@Nullable Object obj, Bundle action) {
         if (obj != null) {
             RefInvoke.invokeInstanceMethod(obj,
                     "setBundle",
@@ -383,7 +383,7 @@ public class DpManagerProxy {
 
 
     @NonNull
-    private static Bundle getBundle(@Nullable Object obj) {
+    public static Bundle getBundle(@Nullable Object obj) {
         if (obj != null) {
             return (Bundle) RefInvoke.invokeInstanceMethod(obj,
                     "getBundle",
@@ -397,14 +397,14 @@ public class DpManagerProxy {
 
     @SuppressLint("WrongConstant")
     @Nullable
-    private static Object getDpManagerInstance() {
+    public static Object getDpManagerInstance() {
         if (globalApplication == null){
             return null;
         }
         return globalApplication.getSystemService("dp");
     }
 
-    private static void writeChannel(long var1, Object channelData) {
+    public static void writeChannel(long var1, Object channelData) {
         Object getService = getDpManagerInstance();
         if (getService != null) {
             RefInvoke.invokeInstanceMethod(getService,
@@ -415,7 +415,7 @@ public class DpManagerProxy {
         }
     }
 
-    private static final String TAG = "DpManagerProxy";
+    public static final String TAG = "DpManagerProxy";
 
     public static void createImagePreviewCreate(int displayId) {
         try {
@@ -532,14 +532,17 @@ public class DpManagerProxy {
         }
     }
 
-    public static void createImagePreviewOpen(HardwareBuffer buffer, int dataType) {
+
+    public static void createImagePreviewOpen(HardwareBuffer buffer, int dataType,int displayWidth,int displayHeight) {
         try {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
             bundle.putString(getConstAction(), getConstActionImageOpen());
             bundle.putParcelable(getConstDataKeysHardwareBuffer(), buffer);
-            bundle.putInt(getConstDataKeysDATATYPE(), dataType);
+            bundle.putInt(getConstDataKeysDATATYPE(),dataType);
+            bundle.putInt(getConstDataKeysResolutionWidth(),displayWidth);
+            bundle.putInt(getConstDataKeysResolutionHeight(),displayHeight);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -594,6 +597,14 @@ public class DpManagerProxy {
         }
         return false;
     }
+
+    public static String getBundleAction(Object readChannelData){
+        Bundle bundle = getBundle(readChannelData);
+        return bundle.getString(getConstAction(), "");
+    }
+
+
+
 
     @NotNull
     public static boolean isImagePreviewNext(Object readChannelData) {
