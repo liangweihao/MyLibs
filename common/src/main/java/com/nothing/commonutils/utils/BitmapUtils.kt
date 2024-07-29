@@ -108,8 +108,10 @@ object BitmapUtils {
     }
 
 
+
+
     // 分割左右眼
-    fun split3DBitmaps(input3D: Bitmap?): Pair<Bitmap, Bitmap>? {
+    fun split3DBitmaps(input3D:Bitmap?,recycleInput: Boolean = false): Pair<Bitmap,Bitmap>? {
         // 确保两个 Bitmap 非空
         if (input3D == null) {
             return null
@@ -119,8 +121,12 @@ object BitmapUtils {
         val dividedWidth = width / 2
         val leftBitmap = Bitmap.createBitmap(input3D, 0, 0, dividedWidth, height)
         val rightBitmap = Bitmap.createBitmap(input3D, dividedWidth, 0, dividedWidth, height)
-        return Pair(leftBitmap, rightBitmap)
+        if (recycleInput) {
+            input3D.recycle()
+        }
+        return Pair(leftBitmap,rightBitmap)
     }
+
 
 
     /**
