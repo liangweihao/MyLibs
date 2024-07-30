@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
 import android.util.Log
@@ -156,7 +157,7 @@ object BitmapUtils {
         return if (value % 2 == 0) value else value + 1
     }
 
-    fun drawCenteredBitmap(canvas: Canvas, bitmap: Bitmap) {
+    fun drawCenteredBitmap(canvas: Canvas, bitmap: Bitmap, paint: Paint? = null) {
         // 获取 Canvas 的宽度和高度
         // 获取 Canvas 的宽度和高度
         val canvasWidth = canvas.width
@@ -189,7 +190,7 @@ object BitmapUtils {
 
         val destRect = Rect(left, top, right, bottom) // 目标位图在 Canvas 上的区域
 
-        canvas.drawBitmap(bitmap, srcRect, destRect, null)
+        canvas.drawBitmap(bitmap, srcRect, destRect, paint)
     }
 
     fun getSafeBitmap(context: Context, uri: Uri, maxHeight: Int = Int.MAX_VALUE): Bitmap? {
