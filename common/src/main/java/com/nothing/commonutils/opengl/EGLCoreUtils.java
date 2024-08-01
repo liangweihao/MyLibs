@@ -10,7 +10,6 @@ import android.opengl.EGLSurface;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.os.ParcelFileDescriptor;
-import android.util.Log;
 
 import com.nothing.commonutils.utils.Lg;
 
@@ -175,13 +174,11 @@ public class EGLCoreUtils {
         onDestroy();
     }
     private void onCreate() {
-        Log.d(TAG, "onCreate");
 
         // create egl context
     }
 
     private void onDestroy() {
-        Log.d(TAG, "onDestroy");
         renderReady = false;
         outputEglCore.releaseSurface(outputEGLSurface);
         outputEglCore.release();

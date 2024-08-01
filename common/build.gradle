@@ -116,7 +116,7 @@ dependencies {
     implementation 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.8'
 
     // opencv
-    implementation group: 'org.opencv', name: 'opencv', version: '4.10.0-kleidicv'
+    implementation group: 'org.opencv', name: 'opencv', version: '4.10.0'
 }
 
 
