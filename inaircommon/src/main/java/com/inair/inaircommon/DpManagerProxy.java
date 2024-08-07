@@ -696,6 +696,23 @@ public class DpManagerProxy {
         }
     }
 
+    public static void createRequestPDFCount(int displayID, int pageCount) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), "pdf_info");
+            bundle.putInt(getConstDisplayID(), displayID);
+            bundle.putInt("count", pageCount);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
     public static void createRequestPDFAlloc(
             int displayID, int hardwareWidth, int hardwareHeight, int index
     ) {
@@ -756,6 +773,38 @@ public class DpManagerProxy {
             Log.e(TAG, " " + e);
         }
     }
+    public static void createPageDownPDF(int displayID,int currentPage) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), "pdf_page_down");
+            bundle.putInt(getConstDisplayID(), displayID);
+            bundle.putInt("page", currentPage);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+    public static void createPageUpPDF(int displayID,int currentPage) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), "pdf_page_up");
+            bundle.putInt(getConstDisplayID(), displayID);
+            bundle.putInt("page", currentPage);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
 
 
     public static int getChannelDataIndex(Object readChannelData) {
