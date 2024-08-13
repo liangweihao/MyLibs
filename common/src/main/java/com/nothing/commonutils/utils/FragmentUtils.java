@@ -14,7 +14,12 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
-
+/**
+ *
+ * replace :  生命周期是上一个先 onCreate 然后再 onDestroy 如果是同一个 fragment 业务的会出现 onCreate 月以后会被 ondestroy 销毁了
+ * remove + add : 他会先把上一个 fragment 的生命周期走完再走新的生命周期
+ *
+ * */
 public class FragmentUtils {
 
     private static final String TAG = "FragmentUtils";
@@ -35,6 +40,26 @@ public class FragmentUtils {
             }
         });
 
+    }
+    
+    public static void remove(FragmentManager fragmentManager, LifecycleOwner lifecycle, String tag){
+        TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
+            @Override
+            public void run() {
+                Try.catchSelf(() ->  {
+                    Fragment fragmentByTag = fragmentManager.findFragmentByTag(tag);
+                    if (fragmentByTag != null){
+                        fragmentManager.beginTransaction().remove(fragmentByTag).commit();
+                    }
+                });
+
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        });
     }
 
     public static void popBackStack(FragmentManager fragmentManager, LifecycleOwner lifecycle) {

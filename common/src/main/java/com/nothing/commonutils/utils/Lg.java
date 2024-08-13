@@ -30,7 +30,7 @@ public class Lg {
             } catch (Throwable e) {
 
             }
-            Log.d(tag, buildStack() + format);
+            Log.d(tag, buildStack(false) + format);
             saveLogToFile(tag + "(D)", buildStack(true) +  format);
         }
     }
@@ -56,7 +56,7 @@ public class Lg {
                 format = String.format(message, args);
             } catch (Throwable e) {
             }
-            Log.e(tag,  buildStack() + format);
+            Log.e(tag,  buildStack(false) + format);
             saveLogToFile(tag + "(E)",  buildStack(true) + format);
         }
     }
@@ -68,7 +68,7 @@ public class Lg {
                 format = String.format(message, args);
             } catch (Throwable e) {
             }
-            Log.w(tag, buildStack() + format);
+            Log.w(tag, buildStack(false) + format);
             saveLogToFile(tag + "(W)", buildStack(true) + format);
         }
     }
@@ -80,7 +80,7 @@ public class Lg {
                 format = String.format(message, args);
             } catch (Throwable e) {
             }
-            Log.i(tag, buildStack() + format);
+            Log.i(tag, buildStack(false) + format);
             saveLogToFile(tag + "(I)", buildStack(true) + format);
         }
     }
@@ -130,7 +130,7 @@ public class Lg {
         }
         long tid = Thread.currentThread().getId();
         lgHandler.post(() -> catchSelf(() -> {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
             String timestamp = sdf.format(new Date());
             String log = timestamp + " - " + tid + ":" + tag + " :  " + logMessage + "\n";
             try {
