@@ -696,7 +696,7 @@ public class DpManagerProxy {
         }
     }
 
-    public static void createRequestPDFCount(int displayID, int pageCount) {
+    public static void createRequestPDFCount(int displayID, int pageCount,int pageSelect) {
         try {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
@@ -704,6 +704,7 @@ public class DpManagerProxy {
             bundle.putString(getConstAction(), "pdf_info");
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("count", pageCount);
+            bundle.putInt("pageSelect", pageSelect);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {

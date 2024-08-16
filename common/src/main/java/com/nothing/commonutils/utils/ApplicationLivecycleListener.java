@@ -9,6 +9,9 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -134,6 +137,7 @@ public class ApplicationLivecycleListener
                              f.hashCode(), String.valueOf(f.getTag()), "Detached");
         }
     };
+    private Map<Activity,FragmentManager.OnBackStackChangedListener> stackListeners = new HashMap<>();
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
@@ -141,6 +145,19 @@ public class ApplicationLivecycleListener
             FragmentManager supportFragmentManager
                     = ((FragmentActivity) activity).getSupportFragmentManager();
             supportFragmentManager.registerFragmentLifecycleCallbacks(callback, true);
+            FragmentManager.OnBackStackChangedListener stackListener = new FragmentManager.OnBackStackChangedListener() {
+                @Override
+                public void onBackStackChanged() {
+                    if (supportFragmentManager.getBackStackEntryCount() > 0) {
+                        FragmentManager.BackStackEntry topEntry
+                                = supportFragmentManager.getBackStackEntryAt(
+                                supportFragmentManager.getBackStackEntryCount() - 1);
+                        Lg.i(TAG,"BackStackChanged:%s:%s",activity.getLocalClassName(),String.valueOf(topEntry.getName()));
+                    }
+                }
+            };
+            stackListeners.put(activity,stackListener);
+            supportFragmentManager.addOnBackStackChangedListener(stackListener);
         }
         if (Enable) {
             Lg.i(TAG, "ActivityCreate: %s@%d", activity.getLocalClassName(), activity.hashCode());

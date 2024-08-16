@@ -6,7 +6,7 @@
 
 
         <receiver
-            android:name=".services.ShellBroadReceiver"
+            android:name="com.nothing.commonutils.services.ShellBroadReceiver"
             android:exported="true"
             android:enabled="true"
             >

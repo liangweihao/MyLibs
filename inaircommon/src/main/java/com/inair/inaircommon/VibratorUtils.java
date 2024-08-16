@@ -5,6 +5,11 @@ import android.view.View;
 
 import com.nothing.commonutils.utils.RefInvoke;
 
+/**
+ * xml 加震动  hover_vibrator 或者 View.setHoverListener
+ *
+ *
+ * */
 public class VibratorUtils {
 
     public static void performTickClick(View object) {

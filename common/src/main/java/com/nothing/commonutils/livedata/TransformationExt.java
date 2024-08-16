@@ -1,6 +1,8 @@
 package com.nothing.commonutils.livedata;
 
 
+import android.os.Looper;
+
 import com.nothing.commonutils.lifecycle.ObserverDispose;
 import com.nothing.commonutils.lifecycle.ObserverRunner;
 import com.nothing.commonutils.utils.Try;
@@ -127,7 +129,11 @@ public class TransformationExt {
         }else {
             objectMutableLiveData.observe(owner, observer);
         }
-        objectMutableLiveData.postValue(new Object());
+        if (Looper.myLooper() == Looper.getMainLooper()){
+            objectMutableLiveData.setValue(new Object());
+        }else {
+            objectMutableLiveData.postValue(new Object());
+        }
         return observerDispose;
     }
 

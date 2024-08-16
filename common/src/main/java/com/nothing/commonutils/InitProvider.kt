@@ -6,13 +6,18 @@ import android.content.ContentValues
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import com.nothing.commonutils.services.ShellBroadReceiver
 import com.nothing.commonutils.utils.ApplicationLivecycleListener
+import com.nothing.commonutils.utils.ApplicationMessagePrinter
 import com.nothing.commonutils.utils.Lg
 import com.nothing.commonutils.utils.LocalCrashHandler
 
 
 class InitProvider : ContentProvider() {
+    private  val TAG = "InitProvider"
+
     override fun onCreate(): Boolean {
         Lg.init(context)
         Thread.setDefaultUncaughtExceptionHandler(LocalCrashHandler(context!!))
@@ -22,6 +27,7 @@ class InitProvider : ContentProvider() {
         (context!!.applicationContext as? Application)?.registerActivityLifecycleCallbacks(
             applicationLivecycleListener
         )
+        Looper.getMainLooper().setMessageLogging(ApplicationMessagePrinter())
         return true
     }
 
