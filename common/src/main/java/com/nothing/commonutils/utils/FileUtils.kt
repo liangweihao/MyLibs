@@ -12,22 +12,8 @@ import androidx.core.content.ContextCompat
 import java.io.*
 import java.util.*
 
-/**
- *--------------------
- *<p>Author：
- *         liangweihao
- *<p>Created Time:
- *          2022/5/17
- *<p>Intro:
- *
- *<p>Thinking:
- *
- *<p>Problem:
- *
- *<p>Attention:
- *--------------------
- */
 
+@Deprecated(" use NewFileUtils")
 object FileUtils {
 
     /**

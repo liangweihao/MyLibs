@@ -37,7 +37,7 @@ public class ApplicationLivecycleListener
                 @NonNull FragmentManager fm, @NonNull Fragment f, @NonNull Context context
         ) {
             super.onFragmentAttached(fm, f, context);
-            if (Enable) Lg.i(TAG, "FragmentChanged: %s@%d%s:%s", f.getClass().getSimpleName(),
+            if (Enable) Lg.i(TAG, "FragmentChanged: %s@%d:%s:%s", f.getClass().getSimpleName(),
                              f.hashCode(), String.valueOf(f.getTag()), "Attached");
         }
 
@@ -55,7 +55,7 @@ public class ApplicationLivecycleListener
                 @Nullable Bundle savedInstanceState
         ) {
             super.onFragmentCreated(fm, f, savedInstanceState);
-            if (Enable) Lg.i(TAG, "FragmentChanged: %s@%d%s:%s", f.getClass().getSimpleName(),
+            if (Enable) Lg.i(TAG, "FragmentChanged: %s@%d:%s:%s", f.getClass().getSimpleName(),
                              f.hashCode(), String.valueOf(f.getTag()), "Created");
         }
 
