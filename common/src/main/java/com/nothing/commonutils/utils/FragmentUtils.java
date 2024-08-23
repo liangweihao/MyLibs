@@ -7,6 +7,7 @@ import android.os.Looper;
 import com.nothing.commonutils.lifecycle.ObserverRunner;
 import com.nothing.commonutils.livedata.TransformationExt;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import androidx.annotation.IdRes;
@@ -34,6 +35,20 @@ public class FragmentUtils {
         }
         return null;
     }
+
+
+    @NonNull
+    public static ArrayList<FragmentManager.BackStackEntry> getBackEntryList(FragmentManager fragmentManager){
+        ArrayList<FragmentManager.BackStackEntry> backStackEntries = new ArrayList<>();
+        for (int i = 0; i < fragmentManager.getBackStackEntryCount(); i++) {
+
+            FragmentManager.BackStackEntry backStackEntryAt = fragmentManager.getBackStackEntryAt(
+                    i);
+            backStackEntries.add(backStackEntryAt);
+        }
+        return backStackEntries;
+    }
+
 
 
     public static boolean isRootStackEntry(FragmentManager fragmentManager) {

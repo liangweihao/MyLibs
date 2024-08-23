@@ -1,6 +1,8 @@
 package com.nothing.commonutils.utils;
 
 
+import java.util.concurrent.Callable;
+
 import androidx.annotation.Nullable;
 
 public class Try {
@@ -23,6 +25,15 @@ public class Try {
         } catch (Throwable e){
 
 
+        }
+    }
+
+
+    public static Object useOrNull(Callable<?> callable){
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            return null;
         }
     }
 }

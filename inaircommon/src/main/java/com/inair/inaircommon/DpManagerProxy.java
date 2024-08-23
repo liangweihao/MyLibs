@@ -64,6 +64,11 @@ public class DpManagerProxy {
         return 1 << 5;
     }
 
+    public static int getConstTypeDisplay() {
+        return 16;
+    }
+
+
     public static String getConstActionImageOpen() {
         Object imagePreview = RefInvoke.getStaticFieldObject(CLASS_CHANNEL_DATA_KEYS, "IMAGE_OPEN");
         if (imagePreview != null) {
@@ -406,6 +411,7 @@ public class DpManagerProxy {
     @Nullable
     public static Object getDpManagerInstance() {
         if (globalApplication == null) {
+            Lg.e(TAG,"global application is null , do init");
             return null;
         }
         return globalApplication.getSystemService("dp");
@@ -421,7 +427,7 @@ public class DpManagerProxy {
 
             int action = getAction(channelData);
             Bundle bundle = getBundle(channelData);
-            Lg.i(TAG, "write channel data action:%d bundle:%s", action,
+            Lg.i(TAG, "write channel；%d data action:%d bundle:%s",var1, action,
                  GsonUtils.bundleToJson(bundle));
         }
     }
@@ -821,5 +827,23 @@ public class DpManagerProxy {
             return bundle.getString(getConstAction(), "").equals("pdf_alloc") ? bundle : null;
         }
         return null;
+    }
+
+
+    public static  void updateDisplaySize(int displayID,int display_width,int display_height,int dpi){
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, 1025);
+            Bundle bundle = new Bundle();
+            bundle.putInt(getConstDisplayID(), displayID);
+            bundle.putInt("display_width", display_width);
+            bundle.putInt("display_height", display_height);
+            bundle.putInt("display_dpi", dpi);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
     }
 }

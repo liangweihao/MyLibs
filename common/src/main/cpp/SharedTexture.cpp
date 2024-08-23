@@ -138,7 +138,7 @@ std::shared_ptr<SharedTexture> SharedTexture::Make(int width, int height) {
       static_cast<uint32_t>(width),
       static_cast<uint32_t>(height),
       1,
-      AHARDWAREBUFFER_FORMAT_R5G6B5_UNORM,
+      AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
       AHARDWAREBUFFER_USAGE_CPU_READ_NEVER | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER |
           AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT,
       0,

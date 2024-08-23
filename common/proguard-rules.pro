@@ -34,3 +34,4 @@
 }
 
 
+-keep class com.facebook.soloader.** { *; }

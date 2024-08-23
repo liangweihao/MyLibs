@@ -21,7 +21,6 @@ class InitProvider : ContentProvider() {
     override fun onCreate(): Boolean {
         Lg.init(context)
         Thread.setDefaultUncaughtExceptionHandler(LocalCrashHandler(context!!))
-        Lg.d("Shell", ShellBroadReceiver.USAGE)
         val applicationLivecycleListener = ApplicationLivecycleListener()
         context!!.registerComponentCallbacks(applicationLivecycleListener)
         (context!!.applicationContext as? Application)?.registerActivityLifecycleCallbacks(

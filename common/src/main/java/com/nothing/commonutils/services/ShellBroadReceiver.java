@@ -3,32 +3,74 @@ package com.nothing.commonutils.services;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.text.TextUtils;
 
 import com.nothing.commonutils.utils.FileUtils;
 import com.nothing.commonutils.utils.Lg;
 
 import java.io.File;
+import java.util.Arrays;
 
 
 public class ShellBroadReceiver extends BroadcastReceiver {
     private static final String TAG = "ShellBroadReceiver";
 
-    public static final String COPY_FILE = "com.nothing.common.copy_file";
-    public static final String USAGE = "ShellBroadReceiver Usage:\n" +
-                                       "copy_file:复制文件到指定目录\n" +
-                                       String.format(
-                                               "          adb shell am broadcast -a %s --es from <from_value> --es to <to_value>\n",
-                                               COPY_FILE);
+    public static final String COPY_FILE = "copy_file";
+    public static final String FILE_LIST = "file_list";
 
+
+    public static final String USAGE = "ShellBroadReceiver Usage:\n" +
+                                       "copy_file:复制文件到指定目录\n" + String.format(
+            "          adb shell am broadcast -a %s --es from _ --es to _\n", COPY_FILE) +
+                                       String.format("   adb shell am broadcast -a %s  --es file _\n",
+                                                     FILE_LIST);
+
+    private String baseTag = "";
+
+    public ShellBroadReceiver(String baseTag) {
+        this.baseTag = baseTag;
+        Lg.i(TAG, USAGE);
+    }
+
+    public IntentFilter getIntentFileter() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(appendAction(COPY_FILE));
+        intentFilter.addAction(appendAction(FILE_LIST));
+        return intentFilter;
+    }
+
+    private String appendAction(String subAction) {
+        return baseTag + "." + subAction;
+    }
+
+
+    private boolean equalAction(String subAction, String inputAction) {
+        if ((baseTag + "." + subAction).equals(inputAction)) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (COPY_FILE.equals(intent.getAction())) {
+        if (equalAction(COPY_FILE, intent.getAction())) {
             String from = intent.getStringExtra("from");
             String to = intent.getStringExtra("to");
 //            adb shell am broadcast -a com.example.customaction --es from <from_value> --es to <to_value>
-            boolean copyFilesTo = FileUtils.INSTANCE.copyFilesTo(new File(from), new File(to));
+            boolean copyFilesTo = false;
+            if (!TextUtils.isEmpty(from) && !TextUtils.isEmpty(to)) {
+                copyFilesTo = FileUtils.INSTANCE.copyFilesTo(new File(from), new File(to));
+            }
             Lg.i(TAG, "receiver copy file %s to %s , state:%b", from, to, copyFilesTo);
+        } else if (equalAction(FILE_LIST, intent.getAction())) {
+            String from = intent.getStringExtra("file");
+            if (!TextUtils.isEmpty(from)){
+                File file = new File(from);
+                File[] files = file.listFiles();
+                String string = Arrays.toString(files);
+                Lg.i(TAG, "get file %s list :%s", files, string);
+            }
         }
     }
 

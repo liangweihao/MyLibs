@@ -2,19 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.nothing.commonutils">
 
-    <application>
-
-
-        <receiver
-            android:name="com.nothing.commonutils.services.ShellBroadReceiver"
-            android:exported="true"
-            android:enabled="true"
-            >
-            <intent-filter>
-                <action android:name="com.nothing.common.copy_file"/>
-            </intent-filter>
-        </receiver>
-    </application>
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
