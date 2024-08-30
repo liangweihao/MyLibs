@@ -24,7 +24,33 @@ android {
         }
     }
 
+    signingConfigs {
+        hubdebug {
+            keyAlias 'duoping'
+            keyPassword 'dp2023@duopingkankan'
+            storePassword 'dp2023@duopingkankan'
+            storeFile file('keystore/platform.jks')
+        }
+    }
 
+    buildTypes {
+        phone{
+            minifyEnabled false
+            debuggable true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+        debug {
+            signingConfig signingConfigs.hubdebug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            signingConfig signingConfigs.hubdebug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
     viewBinding {
         enabled = true
     }
@@ -63,7 +89,38 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
 
-    implementation('androidx.fragment:fragment-ktx:1.6.0-alpha08')
+
+
+    implementation 'androidx.fragment:fragment:1.3.4'
+    // https://mvnrepository.com/artifact/commons-codec/commons-codec
+    implementation group: 'commons-codec', name: 'commons-codec', version: '1.14'
+    // https://mvnrepository.com/artifact/org.apache.poi/poi
+    implementation group: 'org.apache.poi', name: 'poi', version: '3.9'
+    // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '3.9'
+    // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml-schemas
+    implementation group: 'org.apache.poi', name: 'poi-ooxml-schemas', version: '3.9'
+    // https://mvnrepository.com/artifact/org.apache.poi/poi-scratchpad
+    implementation group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.9'
+    // https://mvnrepository.com/artifact/org.apache.xmlbeans/xmlbeans
+    implementation group: 'org.apache.xmlbeans', name: 'xmlbeans', version: '2.3.0'
+    // https://mvnrepository.com/artifact/dom4j/dom4j
+    implementation group: 'dom4j', name: 'dom4j', version: '1.6.1'
+    // https://mvnrepository.com/artifact/stax/stax-api
+    implementation group: 'stax', name: 'stax-api', version: '1.0.1'
+    implementation group: 'org.opencv', name: 'opencv', version: '4.10.0'
+
+
+
+    implementation 'org.pytorch:pytorch_android:+' // 检查最新版本
+    implementation 'org.pytorch:pytorch_android_torchvision:+' // 如果使用TorchVision
+    implementation 'com.facebook.soloader:soloader:+' // 或者最新版本
+
+
+
+
+
+    implementation project(':common')
 
 
 }
