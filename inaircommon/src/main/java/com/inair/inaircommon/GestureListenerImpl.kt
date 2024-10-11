@@ -8,7 +8,7 @@ import android.view.MotionEvent.TOOL_TYPE_MOUSE
 import android.view.ScaleGestureDetector
 import android.view.ViewConfiguration
 
-open class GestureListenerImpl : GestureDetector.OnGestureListener,
+open class GestureListenerImpl : OnGestureListener,
     ScaleGestureDetector.OnScaleGestureListener {
 
     protected var flingEnable = false

@@ -99,8 +99,16 @@ public class Lg {
             String timestamp = sdf.format(new Date());
 
             String fileName = timestamp + "_app_logs.txt";
-            File file = new File(context.getExternalCacheDir(), fileName);
+            File logDir = new File(context.getExternalFilesDir(null),"log");
+            if (!logDir.exists()) {
+                logDir.mkdir();
+                logDir.setExecutable(true);
+                logDir.setWritable(true);
+                logDir.setReadable(true);
+            }
+            File file = new File( logDir,fileName);
             if (!file.exists()) {
+
                 boolean newFile = file.createNewFile();
                 if (!newFile) {
                     Lg.e(TAG, "create new file false," + file.getPath());

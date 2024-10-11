@@ -3,13 +3,12 @@ plugins {
     id 'com.android.application' version '8.0.2' apply false
     id 'com.android.library' version '8.0.2' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
-
-    id "org.jetbrains.kotlin.kapt" version "1.8.20" apply false
+    id "org.jetbrains.kotlin.kapt" version '1.8.20' apply false
 
 }
 ext {
 //  编译版本
-    configCompileSDK = 33
+    configCompileSDK = 34
 //  目标版本
     configTargetSDK = 33
 //  最小版本
@@ -19,9 +18,7 @@ ext {
     configMajorVersionName = "1.1.1"
 //  包名字
     configMajorPackageName = "com.nothing.demo"
-    kotlin_version = '1.8.20'
     javaSDK = JavaVersion.VERSION_17
-
 
 }
 

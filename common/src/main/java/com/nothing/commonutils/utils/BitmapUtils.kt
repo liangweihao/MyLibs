@@ -9,9 +9,11 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.util.Size
 import android.view.View
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -109,10 +111,8 @@ object BitmapUtils {
     }
 
 
-
-
     // 分割左右眼
-    fun split3DBitmaps(input3D:Bitmap?,recycleInput: Boolean = false): Pair<Bitmap,Bitmap>? {
+    fun split3DBitmaps(input3D: Bitmap?, recycleInput: Boolean = false): Pair<Bitmap, Bitmap>? {
         // 确保两个 Bitmap 非空
         if (input3D == null) {
             return null
@@ -125,10 +125,29 @@ object BitmapUtils {
         if (recycleInput) {
             input3D.recycle()
         }
-        return Pair(leftBitmap,rightBitmap)
+        return Pair(leftBitmap, rightBitmap)
+    }
+
+    fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
+        val stream: ByteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(convertConfigToFormat(bitmap.config), 100, stream)
+        return stream.toByteArray()
     }
 
 
+    fun convertConfigToFormat(bitmapConfig: Bitmap.Config): CompressFormat {
+        return when (bitmapConfig) {
+            Bitmap.Config.ARGB_8888 -> CompressFormat.PNG
+            Bitmap.Config.RGB_565 -> CompressFormat.JPEG
+            Bitmap.Config.ALPHA_8 -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                CompressFormat.WEBP_LOSSLESS
+            } else {
+                CompressFormat.WEBP
+            }
+
+            else -> CompressFormat.PNG
+        }
+    }
 
     /**
      * @return null 代表 分配失败或者是不需要分配

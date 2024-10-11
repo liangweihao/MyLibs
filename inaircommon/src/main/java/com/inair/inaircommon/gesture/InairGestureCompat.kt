@@ -22,7 +22,49 @@ class InairGestureCompat(
 
     private val TAG = "InairGestureCompat"
     init {
-        gestureDetectorCompat = GestureDetector(context, gestureListenerImpl)
+        gestureDetectorCompat = GestureDetector(context, object :GestureDetector.OnGestureListener{
+            override fun onDown(e: MotionEvent): Boolean {
+                return gestureListenerImpl.onDown(e)
+            }
+
+            override fun onShowPress(e: MotionEvent) {
+                gestureListenerImpl.onShowPress(e)
+            }
+
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                return gestureListenerImpl.onSingleTapUp(e)
+            }
+
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                if (e1 == null){
+                    return false
+                }
+               return gestureListenerImpl.onScroll(e1,e2,distanceX,distanceY)
+            }
+
+            override fun onLongPress(e: MotionEvent) {
+                gestureListenerImpl.onLongPress(e)
+            }
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 == null){
+                    return false
+                }
+                return gestureListenerImpl.onFling(e1,e2,velocityX,velocityY)
+            }
+
+
+        })
         scaleGestureDetector = ScaleGestureDetector(context, gestureListenerImpl)
          gestureDetectorCompat.setIsLongpressEnabled(false)
     }

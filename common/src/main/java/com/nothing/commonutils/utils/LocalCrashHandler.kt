@@ -42,7 +42,7 @@ class LocalCrashHandler(private val context: Context) : Thread.UncaughtException
             val crashInfo = buildCrashInfo(throwable)
             val file = File(
                 context.getExternalFilesDir(null),
-                "crash_log_${System.currentTimeMillis()}.txt"
+                "crash/crash_log_${System.currentTimeMillis()}.txt"
             )
             FileWriter(file, true).use { writer ->
                 writer.write(crashInfo+"\n")

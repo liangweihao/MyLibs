@@ -22,18 +22,29 @@ public class Try {
     public static void catchSelfNoThrowable(Runnable runnable) {
         try {
             runnable.run();
-        } catch (Throwable e){
+        } catch (Throwable e) {
 
 
         }
     }
 
 
-    public static Object useOrNull(Callable<?> callable){
+    public static Object useOrNull(Callable<?> callable) {
         try {
             return callable.call();
         } catch (Exception e) {
             return null;
         }
+    }
+
+
+    public static Runnable catchRunnable(Runnable runnable) {
+        return () -> {
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                e.fillInStackTrace();
+            }
+        };
     }
 }

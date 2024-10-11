@@ -833,7 +833,7 @@ public class DpManagerProxy {
     public static  void updateDisplaySize(int displayID,int display_width,int display_height,int dpi){
         try {
             Object channelData = createChannelDataInstance();
-            setAction(channelData, 1025);
+            setAction(channelData, 1026);
             Bundle bundle = new Bundle();
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("display_width", display_width);

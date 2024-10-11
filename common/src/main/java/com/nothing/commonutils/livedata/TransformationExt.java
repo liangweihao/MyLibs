@@ -38,7 +38,7 @@ public class TransformationExt {
     public static <T> void observerOnlyOnce(LiveData<T> source,
                                             LifecycleOwner owner,
                                             Observer<T> observer) {
-        source.observe(owner, new Observer<>() {
+        source.observe(owner, new Observer<T>() {
             @Override
             public void onChanged(T list) {
                 source.removeObserver(this);
@@ -50,7 +50,7 @@ public class TransformationExt {
     public static <T> void observerOnlyOnce(LiveData<T> source,
 
                                             Observer<T> observer) {
-        source.observeForever(new Observer<>() {
+        source.observeForever(new Observer<T>() {
             @Override
             public void onChanged(T list) {
                 source.removeObserver(this);
@@ -101,7 +101,7 @@ public class TransformationExt {
         MutableLiveData<Object> objectMutableLiveData = new MutableLiveData<>();
 
         final boolean[] isDispose = {false};
-        Observer<Object> observer = new Observer<>() {
+        Observer<Object> observer = new Observer<Object>() {
             @Override
             public void onChanged(Object o) {
                 objectMutableLiveData.removeObserver(this);
