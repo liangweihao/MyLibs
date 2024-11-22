@@ -51,8 +51,12 @@ public class WorkThreadLoader {
 
                 @Override
                 protected Data doInBackground(Void... params) {
-                    if (onBackRun != null) {
-                        return onBackRun.get();
+                    try {
+                        if (onBackRun != null) {
+                            return onBackRun.get();
+                        }
+                    }catch (Throwable e){
+                        e.fillInStackTrace();
                     }
                     return null;
                 }
@@ -64,8 +68,12 @@ public class WorkThreadLoader {
                     if (printTime){
                         Lg.i(tag,"Execute Time %s ms",String.valueOf(System.currentTimeMillis() - startTime));
                     }
-                    if (onMainRun != null) {
-                        onMainRun.accept(result);
+                    try {
+                        if (onMainRun != null) {
+                            onMainRun.accept(result);
+                        }
+                    } catch (Throwable e) {
+                        e.fillInStackTrace();
                     }
                 }
             };

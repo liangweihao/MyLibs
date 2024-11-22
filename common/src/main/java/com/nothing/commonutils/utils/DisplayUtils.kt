@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.hardware.display.DisplayManager
 import android.os.Build
+import android.util.DisplayMetrics
 import android.util.Size
 import android.util.TypedValue
 import android.view.View
@@ -11,16 +12,17 @@ import androidx.fragment.app.FragmentActivity
 
 
 public object DisplayUtils {
+    var displayMetrics: DisplayMetrics? = null
     fun Float.dp2px(): Float = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, this, Resources.getSystem().displayMetrics)
+        TypedValue.COMPLEX_UNIT_DIP, this, if (displayMetrics != null) displayMetrics else Resources.getSystem().displayMetrics)
 
     fun Float.dp2pxInt(): Int = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, this, Resources.getSystem().displayMetrics).toInt()
+        TypedValue.COMPLEX_UNIT_DIP, this,if (displayMetrics != null) displayMetrics else Resources.getSystem().displayMetrics).toInt()
 
     fun Int.sp2px(): Float = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_SP,
         this.toFloat(),
-        Resources.getSystem().displayMetrics
+        if (displayMetrics != null) displayMetrics else Resources.getSystem().displayMetrics
     )
 
 

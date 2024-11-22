@@ -27,10 +27,11 @@ class LocalCrashHandler(private val context: Context) : Thread.UncaughtException
         // 保存崩溃信息到本地
         saveCrashInformation(throwable)
         throwable.printStackTrace()
-        Lg.d(
+        Lg.e(
             TAG,
             "uncaughtException() called with: thread = $thread, throwable = ${throwable.message}"
         )
+        Lg.w(TAG,"Kill Process By Self")
         Process.killProcess(Process.myPid())
     }
 
@@ -40,10 +41,16 @@ class LocalCrashHandler(private val context: Context) : Thread.UncaughtException
         try {
             // 将崩溃信息保存到本地
             val crashInfo = buildCrashInfo(throwable)
+            var crashDir = File(
+                context.getExternalFilesDir(null), "crash")
+            crashDir.mkdir()
             val file = File(
-                context.getExternalFilesDir(null),
-                "crash/crash_log_${System.currentTimeMillis()}.txt"
+                crashDir,
+                "crash_log_${System.currentTimeMillis()}.txt"
             )
+            if (!file.exists()) {
+                file.createNewFile()
+            }
             FileWriter(file, true).use { writer ->
                 writer.write(crashInfo+"\n")
                 try {

@@ -15,31 +15,31 @@ public class GsonUtils {
 
 
     @NonNull
-    public static String toJson(Object obj){
+    public synchronized static String toJson(Object obj){
         String json = "";
         try {
             json = new Gson().toJson(obj);
         }catch (Throwable e){
-            e.printStackTrace();
+            e.fillInStackTrace();
         }
         return json;
     }
 
 
     @Nullable
-    public static <T> T toModle(String json,Class<T> tClass){
+    public synchronized static <T> T toModle(String json,Class<T> tClass){
         try{
             T t = new Gson().fromJson(json, tClass);
             return  t;
         }catch (Throwable t){
-            t.printStackTrace();
+            t.fillInStackTrace();
         }
         return null;
     }
 
 
     @NonNull
-    public static String bundleToJson(@NonNull Bundle bundle){
+    public synchronized static String bundleToJson(@NonNull Bundle bundle){
         JSONObject json = new JSONObject();
         for (String key : bundle.keySet()) {
             try {

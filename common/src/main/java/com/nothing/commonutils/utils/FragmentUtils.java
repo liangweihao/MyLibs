@@ -90,6 +90,7 @@ public class FragmentUtils {
             }
         });
     }
+    // TODO:LWH  2024/10/25 会推到指定的tag  如果使用POP_BACK_STACK_INCLUSIVE 就会回退到的fragment同时也会被销毁
 
     public static void popBackStack(FragmentManager fragmentManager, LifecycleOwner lifecycle) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
@@ -104,6 +105,8 @@ public class FragmentUtils {
             }
         });
     }
+
+    // TODO:LWH  2024/10/25 会推到指定的tag  如果使用POP_BACK_STACK_INCLUSIVE 就会回退到的fragment同时也会被销毁
     public static void popBackStack(FragmentManager fragmentManager, LifecycleOwner lifecycle,String tag) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
             @Override
@@ -125,6 +128,8 @@ public class FragmentUtils {
             }
         });
     }
+    // TODO:LWH  2024/10/25 会推到指定的tag  如果使用POP_BACK_STACK_INCLUSIVE 就会回退到的fragment同时也会被销毁
+
     public static void popBackStackAll(FragmentManager fragmentManager, LifecycleOwner lifecycle,String tag) {
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
             @Override
@@ -139,6 +144,7 @@ public class FragmentUtils {
         });
     }
 
+    // TODO:LWH  2024/10/25 会推到指定的tag  如果使用POP_BACK_STACK_INCLUSIVE 就会回退到的fragment同时也会被销毁
 
     public static void popBackStackImmediate(FragmentManager fragmentManager, LifecycleOwner lifecycle){
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {
@@ -153,6 +159,7 @@ public class FragmentUtils {
             }
         });
     }
+    // TODO:LWH  2024/10/25 会推到指定的tag  如果使用POP_BACK_STACK_INCLUSIVE 就会回退到的fragment同时也会被销毁
 
     public static void popBackStackImmediate(FragmentManager fragmentManager, LifecycleOwner lifecycle,@Nullable final String tag){
         TransformationExt.runOnLifecycleSafe(lifecycle, new ObserverRunner() {

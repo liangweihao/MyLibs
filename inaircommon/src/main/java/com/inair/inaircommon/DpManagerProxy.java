@@ -450,6 +450,42 @@ public class DpManagerProxy {
         }
     }
 
+    public static void createImagePreviewShow(int displayId) {
+        try {
+
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), "ACTION_SHOW");
+            bundle.putInt(getConstDisplayID(), displayId);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
+    public static void createImagePreviewHide(int displayId) {
+        try {
+
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), "ACTION_HIDE");
+            bundle.putInt(getConstDisplayID(), displayId);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
+
+
 
     public static void createImageModelCreate(int displayId) {
         try {
