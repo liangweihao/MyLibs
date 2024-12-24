@@ -5,6 +5,9 @@ import android.util.Printer;
 public class ApplicationMessagePrinter implements Printer {
     private static final String TAG = "ApplicationMessagePrint";
 
+    public ApplicationMessagePrinter( ) {
+     }
+
     @Override
     public void println(String x) {
         if (x.contains("<<<<") && x.contains("android.view.View$PerformClick")) {

@@ -9,7 +9,9 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -21,6 +23,10 @@ import androidx.fragment.app.FragmentManager;
 public class ApplicationLivecycleListener
         implements Application.ActivityLifecycleCallbacks, ComponentCallbacks2,
         View.OnLayoutChangeListener {
+
+    public static List<Activity> activities = new ArrayList<>();
+    public static List<Fragment> fragments = new ArrayList<>();
+
 
     public static boolean Enable = true;
     private static final String TAG = "Livecycle";
@@ -38,6 +44,7 @@ public class ApplicationLivecycleListener
                 @NonNull FragmentManager fm, @NonNull Fragment f, @NonNull Context context
         ) {
             super.onFragmentAttached(fm, f, context);
+            fragments.add(f);
             if (Enable) Lg.i(TAG, "Fragment: %s@%d:%s:%s", f.getClass().getSimpleName(),
                              f.hashCode(), String.valueOf(f.getTag()), "Attached");
         }
@@ -134,6 +141,7 @@ public class ApplicationLivecycleListener
         @Override
         public void onFragmentDetached(@NonNull FragmentManager fm, @NonNull Fragment f) {
             super.onFragmentDetached(fm, f);
+            fragments.remove(f);
             if (Enable) Lg.i(TAG, "Fragment: %s@%d:%s:%s", f.getClass().getSimpleName(),
                              f.hashCode(), String.valueOf(f.getTag()), "Detached");
         }
@@ -142,6 +150,7 @@ public class ApplicationLivecycleListener
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
+        activities.add(activity);
         DisplayUtils.INSTANCE.setDisplayMetrics(activity.getResources().getDisplayMetrics());
 
         if (activity instanceof FragmentActivity) {
@@ -207,6 +216,8 @@ public class ApplicationLivecycleListener
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
+        activities.remove(activity);
+
         if (Enable) {
             Lg.i(TAG, "Destroy: %s@%d", activity.getLocalClassName(), activity.hashCode());
         }

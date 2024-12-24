@@ -42,8 +42,8 @@ class LocalCrashHandler(private val context: Context) : Thread.UncaughtException
             // 将崩溃信息保存到本地
             val crashInfo = buildCrashInfo(throwable)
             var crashDir = File(
-                context.getExternalFilesDir(null), "crash")
-            crashDir.mkdir()
+                context.getExternalFilesDir(null)!!.parentFile, "crash")
+            crashDir.mkdirs()
             val file = File(
                 crashDir,
                 "crash_log_${System.currentTimeMillis()}.txt"

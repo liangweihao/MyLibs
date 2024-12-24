@@ -7,9 +7,9 @@ import android.content.IntentFilter;
 import android.text.TextUtils;
 
 import com.nothing.commonutils.utils.BugReporterZip;
+import com.nothing.commonutils.utils.DynamicClassLoader;
 import com.nothing.commonutils.utils.FileUtils;
 import com.nothing.commonutils.utils.Lg;
-import com.nothing.commonutils.utils.NewFileUtils;
 import com.nothing.commonutils.utils.RefInvoke;
 
 import java.io.File;
@@ -24,6 +24,7 @@ public class ShellBroadReceiver extends BroadcastReceiver {
     public static final String FILE_LIST = "file_list";
     public static final String REPORT = "report";
     public static final String STATIC_CLASS = "static_class";
+    public static final String DYN_CLASS = "dyn_class";
 
 
     private String USAGE = "";
@@ -47,6 +48,12 @@ public class ShellBroadReceiver extends BroadcastReceiver {
                         "adb shell am broadcast -a %s --es class _ --es field _ --es method _ --es args _\n",
                         appendAction(STATIC_CLASS)
                 )
+                +
+                String.format(
+                        "adb shell am broadcast -a %s --es path _\n",
+                        appendAction(DYN_CLASS)
+                )
+
 
         ;
         Lg.i(TAG, USAGE);
@@ -58,6 +65,7 @@ public class ShellBroadReceiver extends BroadcastReceiver {
         intentFilter.addAction(appendAction(FILE_LIST));
         intentFilter.addAction(appendAction(REPORT));
         intentFilter.addAction(appendAction(STATIC_CLASS));
+        intentFilter.addAction(appendAction(DYN_CLASS));
         return intentFilter;
     }
 
@@ -93,15 +101,19 @@ public class ShellBroadReceiver extends BroadcastReceiver {
                 Lg.i(TAG, "get file %s list :%s", files, string);
             }
         } else if (equalAction(REPORT, intent.getAction())) {
-            File file1 = new File(context.getExternalFilesDir(null), "log");
-            File file2 = new File(context.getExternalFilesDir(null), "crash");
+            File file1 = new File(context.getExternalFilesDir(null).getParentFile(), "log");
+            File file2 = new File(context.getExternalFilesDir(null).getParentFile(), "crash");
             BugReporterZip.zipLogFiles(context, new File[]{file1, file2});
             try {
-                NewFileUtils.deleteDirectory(file1);
-                NewFileUtils.deleteDirectory(file2);
-                Lg.i(TAG, "Report Suc %s", file1.getPath());
-                Lg.i(TAG, "Report Suc %s", file2.getPath());
-            } catch (IOException e) {
+                for (File file : file1.listFiles()) {
+                    boolean delete = file.delete();
+                    Lg.i(TAG,"Delete %s:%b",file.getPath(),delete);
+                }
+               for (File file : file2.listFiles()) {
+                    boolean delete = file.delete();
+                    Lg.i(TAG,"Delete %s:%b",file.getPath(),delete);
+                }
+            } catch (Throwable e) {
                 e.fillInStackTrace();
             }
 
@@ -112,10 +124,10 @@ public class ShellBroadReceiver extends BroadcastReceiver {
             String[] args = new String[]{};
             try {
                 args = intent.getStringArrayExtra("args");
-                if (args == null){
+                if (args == null) {
                     args = new String[]{intent.getStringExtra("args")};
                 }
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 e.fillInStackTrace();
                 args = new String[]{intent.getStringExtra("args")};
             }
@@ -143,6 +155,15 @@ public class ShellBroadReceiver extends BroadcastReceiver {
                         RefInvoke.invokeInstanceMethod(staticFieldObject, method, classes, args)
                 );
             }
+        } else if (equalAction(DYN_CLASS, intent.getAction())) {
+            String path = intent.getStringExtra("path");
+            DynamicClassLoader dynamicClassLoader = new DynamicClassLoader();
+            try {
+                dynamicClassLoader.callInterface(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 

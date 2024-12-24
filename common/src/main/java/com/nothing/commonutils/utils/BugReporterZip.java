@@ -23,7 +23,7 @@ public class BugReporterZip {
         String timestamp = sdf.format(new Date());
 
         // 创建临时的zip文件
-        File zipFile = new File(context.getExternalFilesDir(null), timestamp+"_log_files.zip");
+        File zipFile = new File(context.getExternalFilesDir(null).getParentFile(), timestamp+"_log_files.zip");
         try  {
             // 遍历log目录下的文件并添加到zip文件
             for (File file : targetDir) {

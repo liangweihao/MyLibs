@@ -8,7 +8,6 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -21,6 +20,7 @@ public class Lg {
     public static List<Integer> logLevel = isDebug ? Arrays.asList(Log.INFO, Log.DEBUG, Log.WARN, Log.ERROR) : Arrays.asList(Log.INFO, Log.WARN, Log.ERROR);
 
     public static boolean BuildStackInfo = isDebug;
+    private static Context context;
 
     public static void d(String tag, String message, Object... args) {
         if (logLevel.contains(Log.DEBUG)) {
@@ -43,7 +43,7 @@ public class Lg {
         }
         try {
             StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-            return Thread.currentThread().getName() + "- (" + stackTrace[3].getFileName() + ":" + stackTrace[3].getLineNumber() + ") ";
+            return Thread.currentThread().getName() + "- (" + stackTrace[2].getFileName() + ":" + stackTrace[2].getLineNumber() + ") ";
         } catch (Throwable e) {
             return "";
         }
@@ -89,34 +89,43 @@ public class Lg {
     private static final String TAG = "Lg";
     private static FileOutputStream fos = null;
     private static Handler lgHandler;
-
+    public static File targetFile;
     public static void init(Context context) {
+        Lg.context = context;
         try {
             HandlerThread handlerThread = new HandlerThread("LG");
             handlerThread.start();
             lgHandler = new Handler(handlerThread.getLooper());
+            initFile(context);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void initFile(Context context){
+
+        try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", Locale.getDefault());
             String timestamp = sdf.format(new Date());
-
             String fileName = timestamp + "_app_logs.txt";
-            File logDir = new File(context.getExternalFilesDir(null),"log");
+            File logDir = new File(context.getExternalFilesDir(null).getParentFile(),"log");
             if (!logDir.exists()) {
-                logDir.mkdir();
+                logDir.mkdirs();
                 logDir.setExecutable(true);
                 logDir.setWritable(true);
                 logDir.setReadable(true);
             }
-            File file = new File( logDir,fileName);
-            if (!file.exists()) {
-
-                boolean newFile = file.createNewFile();
+            targetFile = new File( logDir,fileName);
+            if (!targetFile.exists()) {
+                boolean newFile = targetFile.createNewFile();
                 if (!newFile) {
-                    Lg.e(TAG, "create new file false," + file.getPath());
+                    Lg.e(TAG, "create new file false," + targetFile.getPath());
                 }
             }
-            fos = new FileOutputStream(file);
-            Lg.i(TAG, "init log file:" + file.getPath());
-        } catch (IOException e) {
+            fos = new FileOutputStream(targetFile);
+            Lg.i(TAG, "init log file:" + targetFile.getPath());
+        }catch (Throwable e){
             e.printStackTrace();
         }
     }
@@ -138,6 +147,9 @@ public class Lg {
         }
         long tid = Thread.currentThread().getId();
         lgHandler.post(() -> catchSelf(() -> {
+            if (!targetFile.exists()){
+                initFile(context);
+            }
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
             String timestamp = sdf.format(new Date());
             String log = timestamp + " - " + tid + ":" + tag + " :  " + logMessage + "\n";

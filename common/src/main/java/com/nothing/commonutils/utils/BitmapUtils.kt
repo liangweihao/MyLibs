@@ -13,6 +13,7 @@ import android.os.Build
 import android.util.Log
 import android.util.Size
 import android.view.View
+import com.nothing.commonutils.utils.bitmap.ImageLoader
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -230,6 +231,7 @@ object BitmapUtils {
             width = bitmapSize!!.width
             height = bitmapSize!!.height
 
+
             ow = width
             oh = height
 
@@ -289,7 +291,8 @@ object BitmapUtils {
                     "align bitmap time cost:${System.currentTimeMillis() - currentTimeMillis}ms"
                 )
             }
-
+            val orientation = ImageLoader.getMetadataOrientation(context, uri)
+            decodeBitmap = ImageLoader.orientBitmap(decodeBitmap, orientation)
 
             resultWidth = decodeBitmap.width
             resultHeight = decodeBitmap.height
