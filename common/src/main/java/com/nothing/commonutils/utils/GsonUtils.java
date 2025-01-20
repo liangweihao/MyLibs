@@ -44,6 +44,9 @@ public class GsonUtils {
         for (String key : bundle.keySet()) {
             try {
                 Object value = bundle.get(key);
+                if (value == null){
+                    continue;
+                }
                 // Convert Bundle value types to JSON compatible types
                 if (value instanceof Bundle) {
                     value = bundleToJson((Bundle) value); // Recursively convert nested Bundle

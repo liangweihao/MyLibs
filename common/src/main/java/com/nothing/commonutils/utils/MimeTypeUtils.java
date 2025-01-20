@@ -69,6 +69,7 @@ public class MimeTypeUtils {
         EXTENSION_TO_MIME_TYPE_MAP.put("mp4", "video/mp4");
         EXTENSION_TO_MIME_TYPE_MAP.put("mpeg", "video/mpeg");
         EXTENSION_TO_MIME_TYPE_MAP.put("mpg", "video/mpeg");
+        EXTENSION_TO_MIME_TYPE_MAP.put("mkv", "video/x-matroska");
         EXTENSION_TO_MIME_TYPE_MAP.put("mpe", "video/mpeg");
         EXTENSION_TO_MIME_TYPE_MAP.put("mov", "video/quicktime");
         EXTENSION_TO_MIME_TYPE_MAP.put("qt", "video/quicktime");

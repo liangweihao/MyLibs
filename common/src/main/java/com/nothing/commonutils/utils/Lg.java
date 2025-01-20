@@ -6,8 +6,10 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -84,6 +86,15 @@ public class Lg {
             saveLogToFile(tag + "(I)", buildStack(true) + format);
         }
     }
+
+    public static String getStackTraceAsString(Throwable throwable) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+        throwable.printStackTrace(ps);
+        ps.close();
+        return baos.toString();
+    }
+    
 
 
     private static final String TAG = "Lg";

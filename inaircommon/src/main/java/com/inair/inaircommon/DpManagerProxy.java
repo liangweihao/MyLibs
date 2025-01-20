@@ -3,6 +3,7 @@ package com.inair.inaircommon;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
+import android.graphics.Rect;
 import android.hardware.HardwareBuffer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import com.nothing.commonutils.utils.RefInvoke;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -53,6 +55,15 @@ public class DpManagerProxy {
             return (int) imagePreview;
         }
         return 1020;
+    }
+
+    public static int getConstInairSpaceWindowResize() {
+        Object imagePreview =
+                RefInvoke.getStaticFieldObject(CLASS_CHANNEL_ACTION, "INAIR_SPACE_WINDOW_RESIZE");
+        if (imagePreview != null) {
+            return (int) imagePreview;
+        }
+        return 1027;
     }
 
     public static long getConstTypeImageDisplay() {
@@ -110,6 +121,15 @@ public class DpManagerProxy {
         }
         return "display_id";
     }
+
+    public static String getConstPackageName() {
+        Object imagePreview = RefInvoke.getStaticFieldObject(CLASS_CHANNEL_DATA_KEYS, "PACKAGE_NAME");
+        if (imagePreview != null) {
+            return (String) imagePreview;
+        }
+        return "package_name";
+    }
+
 
     public static String getConstMaterialType() {
         Object imagePreview = RefInvoke.getStaticFieldObject(CLASS_CHANNEL_DATA_KEYS, "DISPLAY_ID");
@@ -434,7 +454,7 @@ public class DpManagerProxy {
 
     public static final String TAG = "DpManagerProxy";
 
-    public static void createImagePreviewCreate(int displayId) {
+    public static void createImagePreviewCreate(int displayId,String uniqueID) {
         try {
 
             Object channelData = createChannelDataInstance();
@@ -442,6 +462,7 @@ public class DpManagerProxy {
             Bundle bundle = new Bundle();
             bundle.putString(getConstAction(), getConstActionImageCreate());
             bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putString(getConstPackageName(),uniqueID);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -450,7 +471,7 @@ public class DpManagerProxy {
         }
     }
 
-    public static void createImagePreviewShow(int displayId) {
+    public static void createImagePreviewShow(int displayId,String uniqueID) {
         try {
 
             Object channelData = createChannelDataInstance();
@@ -458,6 +479,7 @@ public class DpManagerProxy {
             Bundle bundle = new Bundle();
             bundle.putString(getConstAction(), "ACTION_SHOW");
             bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putString(getConstPackageName(),uniqueID);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -467,7 +489,7 @@ public class DpManagerProxy {
     }
 
 
-    public static void createImagePreviewHide(int displayId) {
+    public static void createImagePreviewHide(int displayId,String uniqueID) {
         try {
 
             Object channelData = createChannelDataInstance();
@@ -475,6 +497,33 @@ public class DpManagerProxy {
             Bundle bundle = new Bundle();
             bundle.putString(getConstAction(), "ACTION_HIDE");
             bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putString(getConstPackageName(),uniqueID);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
+    /**
+     * 针对图库的
+     * */
+    public static void createImagePreviewOpenForIMAGE(
+            HardwareBuffer buffer, int dataType, int displayWidth, int displayHeight, int displayId
+    ) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), getConstActionImageOpen());
+            bundle.putString(getConstPackageName(), "IMAGE");
+            bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putParcelable(getConstDataKeysHardwareBuffer(), buffer);
+            bundle.putInt(getConstDataKeysDATATYPE(), dataType);
+            bundle.putInt(getConstDataKeysResolutionWidth(), displayWidth);
+            bundle.putInt(getConstDataKeysResolutionHeight(), displayHeight);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -485,9 +534,73 @@ public class DpManagerProxy {
 
 
 
+    /**
+     * 针对InairSpace
+     * 显示类型 Int 0普通 1：3D 2：全景
+     * */
+    public static void createImagePreviewOpenINAIRSPACE(
+            HardwareBuffer buffer,
+            Rect windowContent,
+            int displayId
+    ) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), getConstActionImageOpen());
+            bundle.putParcelable(getConstDataKeysHardwareBuffer(), buffer);
+            bundle.putInt(getConstDataKeysDATATYPE(), 0);
+            bundle.putBoolean("IS_OVER",false);
+            bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putParcelable("WINDOW_CONTENT_AREA",windowContent);
+            bundle.putString(getConstPackageName(), "INAIRSPACE");
+            bundle.getParcelable("WINDOW_CONTENT_AREA");
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+    public static void createImageRequestBuffer(int width, int height,int displayId,String uniqueID) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), getConstActionImageRequestAlloc());
+            bundle.putInt(getConstDataKeysResolutionWidth(), width);
+            bundle.putInt(getConstDataKeysResolutionHeight(), height);
+            bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putString(getConstPackageName(),uniqueID);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
 
 
-    public static void createImageModelCreate(int displayId) {
+    public static void createImagePreviewDestroy(int displayID,String uniqueID) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), getConstActionImageDestroy());
+            bundle.putInt(getConstDisplayID(), displayID);
+            bundle.putString(getConstPackageName(),uniqueID);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
+
+    public static void createImageModelCreate(int displayId,String uniqueID) {
         try {
 
             Object channelData = createChannelDataInstance();
@@ -495,6 +608,8 @@ public class DpManagerProxy {
             Bundle bundle = new Bundle();
             bundle.putString(getConstAction(), getConstImageModelCreate());
             bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putString(getConstPackageName(),uniqueID);
+
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -570,57 +685,6 @@ public class DpManagerProxy {
         }
     }
 
-    public static void createImagePreviewDestroy(int displayID) {
-        try {
-            Object channelData = createChannelDataInstance();
-            setAction(channelData, getConstImagePreview());
-            Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), getConstActionImageDestroy());
-            bundle.putInt(getConstDisplayID(), displayID);
-            setBundle(channelData, bundle);
-            writeChannel(getConstTypeImageDisplay(), channelData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, " " + e);
-        }
-    }
-
-
-    public static void createImagePreviewOpen(
-            HardwareBuffer buffer, int dataType, int displayWidth, int displayHeight
-    ) {
-        try {
-            Object channelData = createChannelDataInstance();
-            setAction(channelData, getConstImagePreview());
-            Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), getConstActionImageOpen());
-            bundle.putParcelable(getConstDataKeysHardwareBuffer(), buffer);
-            bundle.putInt(getConstDataKeysDATATYPE(), dataType);
-            bundle.putInt(getConstDataKeysResolutionWidth(), displayWidth);
-            bundle.putInt(getConstDataKeysResolutionHeight(), displayHeight);
-            setBundle(channelData, bundle);
-            writeChannel(getConstTypeImageDisplay(), channelData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, " " + e);
-        }
-    }
-
-    public static void createImageRequestBuffer(int width, int height) {
-        try {
-            Object channelData = createChannelDataInstance();
-            setAction(channelData, getConstImagePreview());
-            Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), getConstActionImageRequestAlloc());
-            bundle.putInt(getConstDataKeysResolutionWidth(), width);
-            bundle.putInt(getConstDataKeysResolutionHeight(), height);
-            setBundle(channelData, bundle);
-            writeChannel(getConstTypeImageDisplay(), channelData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, " " + e);
-        }
-    }
 
 
     @Nullable
@@ -633,12 +697,19 @@ public class DpManagerProxy {
     }
 
     @Nullable
-    public static Bundle hasImageAllocBundle(Object readChannelData) {
+    public static Bundle hasImageAllocBundle(Object readChannelData,int displayID,String uniqueID) {
         int action = getAction(readChannelData);
         if (action == getConstImagePreview()) {
             Bundle bundle = getBundle(readChannelData);
-            return bundle.getString(getConstAction(), "")
-                         .equals(getConstActionImageAlloc()) ? bundle : null;
+            int displayOldID = bundle.getInt(getConstDisplayID(), -1);
+            String packageOldName = bundle.getString(getConstPackageName(), "");
+            Lg.i(TAG,"hasImageAllocBundle DisplayID:%d UniqueID:%s",displayOldID,packageOldName);
+            if (Objects.equals(displayOldID,displayID) && Objects.equals(packageOldName,uniqueID)){
+                return bundle.getString(getConstAction(), "")
+                        .equals(getConstActionImageAlloc()) ? bundle : null;
+            }
+            return null;
+
         }
         return null;
     }
@@ -869,7 +940,7 @@ public class DpManagerProxy {
     public static  void updateDisplaySize(int displayID,int display_width,int display_height,int dpi){
         try {
             Object channelData = createChannelDataInstance();
-            setAction(channelData, 1026);
+            setAction(channelData, getConstInairSpaceWindowResize());
             Bundle bundle = new Bundle();
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("display_width", display_width);

@@ -1,6 +1,7 @@
 package com.nothing.commonutils.utils;
 
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Size;
 
@@ -35,10 +36,7 @@ public class SizeUtils {
      * @like 1800 1000 1920 1080 -> 1920 1067
      */
     public static Size scaleToFill(
-            int sourceWidth,
-            int sourceHeight,
-            int targetWidth,
-            int targetHeight
+            int sourceWidth, int sourceHeight, int targetWidth, int targetHeight
     ) {
         float scaleX = (float) targetWidth / sourceWidth;
         float scaleY = (float) targetHeight / sourceHeight;
@@ -49,31 +47,34 @@ public class SizeUtils {
         return new Size(scaledWidth, scaledHeight);
     }
 
-    public static RectF center(
-            int sourceWidth,
-            int sourceHeight,
-            int targetWidth,
-            int targetHeight
+    public static Rect center(
+            int sourceWidth, int sourceHeight, int targetWidth, int targetHeight
     ) {
         Matrix mMatrix = new Matrix();
         mMatrix.setTranslate(
-                Math.round((targetWidth - sourceWidth) * 0.5f),
-                Math.round((targetHeight - sourceHeight) * 0.5f)
+                (float) Math.floor((targetWidth - sourceWidth)),
+                (float) Math.floor((targetHeight - sourceHeight))
         );
         RectF sourceRect = new RectF(0, 0, sourceWidth, sourceHeight);
         // 创建用于存储变换后（居中后）的Rect对象
         RectF centeredRect = new RectF();
         // 使用Matrix的mapRect方法将源Rect根据设置的变换矩阵进行变换，得到居中后的Rect位置
         mMatrix.mapRect(centeredRect, sourceRect);
-        return centeredRect;
+        return new Rect(
+                (int) centeredRect.left,
+                (int) centeredRect.top,
+                (int) centeredRect.right,
+                (int) centeredRect.bottom
+        );
     }
 
-
-    public static RectF centerCrop(
-            int sourceWidth,
-            int sourceHeight,
-            int targetWidth,
-            int targetHeight
+    /**
+     * 1920, 1080, 265, 265 -》 471:265
+     *
+     *
+     * */
+    public static Rect centerCrop(
+            int sourceWidth, int sourceHeight, int targetWidth, int targetHeight
     ) {
         float scale;
         float dx = 0, dy = 0;
@@ -88,7 +89,7 @@ public class SizeUtils {
         }
 
         mMatrix.setScale(scale, scale);
-        mMatrix.postTranslate(Math.round(dx), Math.round(dy));
+        mMatrix.postTranslate((float) Math.floor(dx), (float) Math.floor(dy));
 
         // 创建一个代表源图像区域的RectF（这里坐标简单假设从(0,0)开始，宽高为前面定义的值）
         RectF sourceRectF = new RectF(0, 0, sourceWidth, sourceHeight);
@@ -97,14 +98,18 @@ public class SizeUtils {
 
         // 使用变换矩阵对源图像区域进行变换，使其符合居中裁剪的效果
         mMatrix.mapRect(targetRectF, sourceRectF);
-        return targetRectF;
+        return new Rect(
+                (int) targetRectF.left,
+                (int) targetRectF.top,
+                (int) targetRectF.right,
+                (int) targetRectF.bottom
+        );
     }
 
 
-    public static RectF centerFit(int sourceWidth,
-                                  int sourceHeight,
-                                  int targetWidth,
-                                  int targetHeight){
+    public static Rect centerFit(
+            int sourceWidth, int sourceHeight, int targetWidth, int targetHeight
+    ) {
         Matrix mDrawMatrix = new Matrix();
         final RectF mTempSrc = new RectF();
         final RectF mTempDst = new RectF();
@@ -114,7 +119,40 @@ public class SizeUtils {
         // 创建一个新的RectF对象用于接收变换后的结果
         RectF resultRectF = new RectF();
         mDrawMatrix.mapRect(resultRectF, mTempSrc);
-        return resultRectF;
+        return new Rect(
+                (int) resultRectF.left,
+                (int) resultRectF.top,
+                (int) resultRectF.right,
+                (int) resultRectF.bottom
+        );
     }
+
+    // 居中填充到目标区域的位置
+    public static Rect centerFillRect(Rect targetRect, int contentWidth, int contentHeight) {
+        int targetWidth = targetRect.width();
+        int targetHeight = targetRect.height();
+        float targetAspectRatio = (float) targetWidth / targetHeight;
+        float contentAspectRatio = (float) contentWidth / contentHeight;
+
+        int newWidth;
+        int newHeight;
+        if (contentAspectRatio > targetAspectRatio) {
+            // 宽度大于高度，宽度填充，高度自适应
+            newWidth = targetWidth;
+            newHeight = (int) (newWidth / contentAspectRatio);
+        } else {
+            // 高度大于宽度，高度填充，宽度自适应
+            newHeight = targetHeight;
+            newWidth = (int) (newHeight * contentAspectRatio);
+        }
+
+        int left = targetRect.left + (targetWidth - newWidth) / 2;
+        int top = targetRect.top + (targetHeight - newHeight) / 2;
+        int right = left + newWidth;
+        int bottom = top + newHeight;
+
+        return new Rect(left, top, right, bottom);
+    }
+
 
 }
