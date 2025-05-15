@@ -66,15 +66,13 @@ android {
         dataBinding = true
         buildConfig true
     }
-    externalNativeBuild {
-        cmake {
-            path file('src/main/cpp/CMakeLists.txt')
-            version '3.22.1'
-        }
-    }
+
 }
 
 dependencies {
+    implementation project(':sharetexture')
+    implementation project(':refinvoke')
+
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 //    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.0"
 
@@ -117,9 +115,10 @@ dependencies {
     implementation 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.8'
 
     // opencv
-    implementation group: 'org.opencv', name: 'opencv', version: '4.10.0'
+    implementation group: 'org.opencv', name: 'opencv', version: '4.11.0'
 
     implementation 'net.lingala.zip4j:zip4j:2.9.1'
+
 
 }
 

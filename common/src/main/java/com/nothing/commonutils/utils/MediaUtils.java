@@ -77,6 +77,8 @@ public class MediaUtils {
                     t.printStackTrace();
                 }
             }
+        }catch (Throwable e){
+            e.printStackTrace();
         }finally {
             if (cursor != null) {
                 cursor.close();

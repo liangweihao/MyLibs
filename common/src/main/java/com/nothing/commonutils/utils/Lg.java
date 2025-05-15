@@ -16,6 +16,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.annotation.Keep;
+
+@Keep
 public class Lg {
 
     public static boolean isDebug = false;

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.view.View;
 
-import com.nothing.commonutils.utils.RefInvoke;
+import com.inair.ref.RefInvoke;
 
 /**
  * xml 加震动  hover_vibrator 或者 View.setHoverListener

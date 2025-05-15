@@ -227,6 +227,7 @@ public class ApplicationLivecycleListener
                     = ((FragmentActivity) activity).getSupportFragmentManager();
             supportFragmentManager.unregisterFragmentLifecycleCallbacks(callback);
         }
+        stackListeners.remove(activity);
     }
 
     @Override

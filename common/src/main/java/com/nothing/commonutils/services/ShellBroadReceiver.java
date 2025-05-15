@@ -6,11 +6,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.text.TextUtils;
 
+import com.inair.ref.RefInvoke;
 import com.nothing.commonutils.utils.BugReporterZip;
 import com.nothing.commonutils.utils.DynamicClassLoader;
 import com.nothing.commonutils.utils.FileUtils;
 import com.nothing.commonutils.utils.Lg;
-import com.nothing.commonutils.utils.RefInvoke;
 
 import java.io.File;
 import java.io.IOException;

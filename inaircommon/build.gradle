@@ -76,6 +76,7 @@ dependencies {
     implementation 'androidx.fragment:fragment-ktx:1.3.4'
 //    "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.0"
     implementation project(':common')
+    implementation project(':refinvoke')
 
     implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
 }

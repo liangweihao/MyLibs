@@ -61,5 +61,8 @@ dependencyResolutionManagement {
 rootProject.name = "MyLibs"
 include ':common'
 include ':server_core'
-include ':demo'
 include ':inaircommon'
+include ':inairrender'
+include ':sharetexture'
+include ':refinvoke'
+include ':app'

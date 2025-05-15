@@ -11,6 +11,7 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.os.ParcelFileDescriptor;
 
+import com.inair.inairsharetexture.SharedTexture;
 import com.nothing.commonutils.utils.Lg;
 
 import java.nio.Buffer;
@@ -88,6 +89,7 @@ public class EGLCoreUtils {
         if (!renderReady) {
             return null;
         }
+        long start = System.currentTimeMillis();
         outputEglCore.makeCurrent(outputEGLSurface);
         // 绑定当前的缓冲区
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
@@ -95,6 +97,7 @@ public class EGLCoreUtils {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         if (renderBitmap != null && !renderBitmap.isRecycled()) {
             // 产生 bitmap的 纹理
+
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inScaled = false;
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
@@ -102,14 +105,17 @@ public class EGLCoreUtils {
                                    GLES20.GL_LINEAR);
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
                                    GLES20.GL_LINEAR);
+            start = System.currentTimeMillis();
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, renderBitmap, 0);
+            Lg.d(TAG,"GL BindTexture " + (System.currentTimeMillis() - start));
             contentTextureId = textureHandle[0];
         } else {
             contentTextureId = 0;
         }
+        start = System.currentTimeMillis();
         // Draw image
         drawImage(contentTextureId,GLES20.GL_TEXTURE_2D);
-
+        Lg.d(TAG,"GL Draw Image " + (System.currentTimeMillis() - start));
 //        int width = renderBitmap.getWidth();
 //        int height = renderBitmap.getHeight();
 //        ByteBuffer pixels = ByteBuffer.allocateDirect(width*height*4);

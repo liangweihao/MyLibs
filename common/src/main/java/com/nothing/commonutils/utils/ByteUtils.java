@@ -1,5 +1,7 @@
 package com.nothing.commonutils.utils;
 
+import static net.lingala.zip4j.util.InternalZipConstants.CHARSET_UTF_8;
+
 public class ByteUtils {
     public static byte[] intToBytes(int i) {
         return new byte[]{(byte) (i & 255), (byte) ((i >> 8) & 255), (byte) ((i >> 16) &
@@ -77,5 +79,13 @@ public class ByteUtils {
             }
         }
         return -1;
+    }
+
+    public static String readUTF(final byte[] data) {
+        return readUTF(data, 0, data.length);
+    }
+
+    public static String readUTF(final byte data[], final int off, final int len) {
+        return new String(data, off, len, CHARSET_UTF_8);
     }
 }
