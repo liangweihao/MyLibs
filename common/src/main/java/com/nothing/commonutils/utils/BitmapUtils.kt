@@ -129,6 +129,27 @@ object BitmapUtils {
         return Pair(leftBitmap, rightBitmap)
     }
 
+    // 分割上下眼
+    fun split3DTBBitmaps(input3D: Bitmap?, recycleInput: Boolean = false): Pair<Bitmap, Bitmap>? {
+        // 确保 Bitmap 非空
+        if (input3D == null) {
+            return null
+        }
+        val width: Int = input3D.width
+        val height: Int = input3D.height
+        // 计算分割后的高度
+        val dividedHeight = height / 2
+        // 创建上半部分 Bitmap
+        val topBitmap = Bitmap.createBitmap(input3D, 0, 0, width, dividedHeight)
+        // 创建下半部分 Bitmap
+        val bottomBitmap = Bitmap.createBitmap(input3D, 0, dividedHeight, width, dividedHeight)
+        if (recycleInput) {
+            input3D.recycle()
+        }
+        return Pair(topBitmap, bottomBitmap)
+    }
+
+
     fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
         val stream: ByteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(convertConfigToFormat(bitmap.config), 100, stream)

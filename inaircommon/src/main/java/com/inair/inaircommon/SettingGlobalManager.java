@@ -2,9 +2,12 @@ package com.inair.inaircommon;
 
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.provider.Settings;
+
+import com.inair.ref.RefInvoke;
 
 public class SettingGlobalManager {
 
@@ -32,4 +35,40 @@ public class SettingGlobalManager {
         contentResolver.unregisterContentObserver(observer);
     }
 
+
+    // 或者反射 android.os.Build.IS_GMS_DEVICE Boolean
+    public static boolean isGMS(Context context) {
+        Object activityTaskManagerInstance = RefInvoke.invokeStaticMethod(
+                "android.app.ActivityTaskManager",
+                "getInstance",
+                null,
+                null
+        );
+        if (activityTaskManagerInstance != null) {
+            // 反射调用 isGmsDevice 方法
+            Object result = RefInvoke.invokeInstanceMethod(
+                    activityTaskManagerInstance,
+                    "isGmsDevice",
+                    null,
+                    null
+            );
+
+            if (result instanceof Boolean) {
+                if ((Boolean) result) {
+                    return true;
+                }
+            }
+        }
+        Object fieldObject = RefInvoke.getFieldObject("android.os.Build", null, "IS_GMS_DEVICE");
+        if (fieldObject != null && fieldObject instanceof Boolean) {
+            if (((Boolean) fieldObject)) {
+                return true;
+            }
+        }
+        return Settings.System.getInt(
+                context.getContentResolver(),
+                "dp_is_gms_patch", // Settings.System.IS_GMS_PATCH 的字符串值
+                0 // 默认值为 0（非 GMS）
+        ) == 1;
+    }
 }

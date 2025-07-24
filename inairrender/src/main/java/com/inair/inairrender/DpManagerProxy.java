@@ -16,6 +16,9 @@ import android.view.MotionEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import androidx.annotation.Keep;
@@ -50,6 +53,26 @@ public class DpManagerProxy {
 
         DataType(int type) {
             this.type = type;
+        }
+
+
+        public static DataType getDataType(int type) {
+            switch (type) {
+                case 1:
+                    return LR_3D;
+                case 2:
+                    return NORMAL_WIDE;
+                case 3:
+                    return TB_3D;
+                case 4:
+                    return LR_3D_WIDE;
+                case 5:
+                    return TB_3D_WIDE;
+                case 6:
+                    return DEEP_ANYTHING_CONVERT;
+                default:
+                    return NORMAL;
+            }
         }
     }
 
@@ -140,6 +163,7 @@ public class DpManagerProxy {
         }
         return "package_name";
     }
+
 
 
     public static String getConstMaterialType() {
@@ -358,76 +382,124 @@ public class DpManagerProxy {
         return instance.second;
     }
 
+    private static List<IDpMangerListenerProxy> dpMangerListenerProxies =  Collections.synchronizedList(new ArrayList<>());
+    private static boolean hasRegisterProxy = false;
+    private static IDpMangerListenerProxy dpMangerListenerProxyImpl = new IDpMangerListenerProxy(){
 
-    public static boolean addDpImageDisplayManagerListener(IDpMangerListenerProxy listener) {
-        setFieldObject(getDpManagerInstance().getClass().getName(),
-                getDpManagerInstance(), "mRegistedDpMangerCallback", false
-        );
-        Object dpServiceInstance = getDpManagerInstance();
-        if (dpServiceInstance != null) {
-            try {
-                Pair<Class<?>, Object> proxyTargetClassInstance
-                        = proxyTargetClassInstance(
-                        CLASS_DP_MANAGER_LISTENER,
-                        new InvokeHandler(listener) {
-                            @Override
-                            public Object invoke(
-                                    Object proxy,
-                                    Method method,
-                                    Object[] args
-                            ) throws Throwable {
-                                try {
-                                    listener.proxyObj = proxy;
-                                    for (Method me : listener.getClass()
-                                            .getMethods()) {
-                                        if (me.getName()
-                                                .equals(method.getName())) {
-                                            return me.invoke(
-                                                    listener,
-                                                    args
-                                            );
-                                        }
-                                    }
-                                } catch (Exception var5) {
-                                    var5.printStackTrace();
-                                }
-                                return method.invoke(
-                                        listener,
-                                        args
-                                );
-                            }
-                        }
-                );
-                if (proxyTargetClassInstance == null) {
-                    return false;
+        @Override
+        public void onEventChanged(long type, byte[] data) {
+            super.onEventChanged(type, data);
+            for (IDpMangerListenerProxy dpMangerListenerProxy : dpMangerListenerProxies) {
+                try {
+                    dpMangerListenerProxy.onEventChanged(type, data);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                return (boolean) invokeInstanceMethod(
-                        dpServiceInstance,
-                        "addDpManagerListener",
-                        new Class[]{long.class, com.inair.ref.RefInvoke.getClass(
-                                CLASS_DP_MANAGER_LISTENER)},
-                        new Object[]{((long) getConstTypeImageDisplay()), proxyTargetClassInstance.second}
-                );
-            } catch (Throwable e) {
-                e.printStackTrace();
             }
         }
+
+        @Override
+        public void onEventForParcelableChanged(long type, @NonNull Object channelData) {
+            super.onEventForParcelableChanged(type, channelData);
+            for (IDpMangerListenerProxy dpMangerListenerProxy : dpMangerListenerProxies) {
+                try {
+                    dpMangerListenerProxy.onEventForParcelableChanged(type, channelData);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
+
+    public static boolean addDpImageDisplayManagerListener(IDpMangerListenerProxy listener) {
+        try {
+            dpMangerListenerProxies.add(listener);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            if (!hasRegisterProxy) {
+                hasRegisterProxy = true;
+                setFieldObject(getDpManagerInstance().getClass().getName(),
+                        getDpManagerInstance(), "mRegistedDpMangerCallback", false
+                );
+                Object dpServiceInstance = getDpManagerInstance();
+                if (dpServiceInstance != null) {
+                    try {
+                        Pair<Class<?>, Object> proxyTargetClassInstance
+                                = proxyTargetClassInstance(
+                                CLASS_DP_MANAGER_LISTENER,
+                                new InvokeHandler(dpMangerListenerProxyImpl) {
+                                    @Override
+                                    public Object invoke(
+                                            Object proxy,
+                                            Method method,
+                                            Object[] args
+                                    ) throws Throwable {
+                                        try {
+                                            dpMangerListenerProxyImpl.proxyObj = proxy;
+                                            for (Method me : dpMangerListenerProxyImpl.getClass()
+                                                    .getMethods()) {
+                                                if (me.getName()
+                                                        .equals(method.getName())) {
+                                                    return me.invoke(
+                                                            dpMangerListenerProxyImpl,
+                                                            args
+                                                    );
+                                                }
+                                            }
+                                        } catch (Exception var5) {
+                                            var5.printStackTrace();
+                                        }
+                                        return method.invoke(
+                                                dpMangerListenerProxyImpl,
+                                                args
+                                        );
+                                    }
+                                }
+                        );
+                        if (proxyTargetClassInstance == null) {
+                            return false;
+                        }
+                        return (boolean) invokeInstanceMethod(
+                                dpServiceInstance,
+                                "addDpManagerListener",
+                                new Class[]{long.class, com.inair.ref.RefInvoke.getClass(
+                                        CLASS_DP_MANAGER_LISTENER)},
+                                new Object[]{((long) getConstTypeImageDisplay()), proxyTargetClassInstance.second}
+                        );
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+        }catch (Throwable e){
+            e.printStackTrace();
+        }
+
         return false;
     }
 
     public static void removeDpImageDisplayManagerListener(IDpMangerListenerProxy listener) {
-        Object dpServiceInstance = getDpManagerInstance();
-        if (dpServiceInstance != null) {
-            try {
-                invokeInstanceMethod(dpServiceInstance, "removeDpManagerListener",
-                        new Class[]{long.class, Class.forName(
-                                CLASS_DP_MANAGER_LISTENER)},
-                        new Object[]{((long) getConstTypeImageDisplay()), listener.proxyObj}
-                );
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
+        try {
+            dpMangerListenerProxies.remove(listener);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+//        Object dpServiceInstance = getDpManagerInstance();
+//        if (dpServiceInstance != null) {
+//            try {
+//                invokeInstanceMethod(dpServiceInstance, "removeDpManagerListener",
+//                        new Class[]{long.class, Class.forName(
+//                                CLASS_DP_MANAGER_LISTENER)},
+//                        new Object[]{((long) getConstTypeImageDisplay()), listener.proxyObj}
+//                );
+//            } catch (Throwable e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public static void setAction(@Nullable Object obj, int action) {
@@ -646,6 +718,27 @@ public class DpManagerProxy {
             Log.e(TAG, " " + e);
         }
     }
+    public static void createMousePreviewLevel(int displayId,int level) {
+        try {
+
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), "ACTION_MOUSE_PREVIEW_LEVEL");
+            bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putInt("mouse_level", level);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
+
+
+
 
 
     /**

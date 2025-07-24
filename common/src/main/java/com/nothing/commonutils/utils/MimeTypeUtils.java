@@ -67,7 +67,7 @@ public class MimeTypeUtils {
         EXTENSION_TO_MIME_TYPE_MAP.put("ogg", "audio/ogg");
         EXTENSION_TO_MIME_TYPE_MAP.put("ra", "audio/x-realaudio");
         EXTENSION_TO_MIME_TYPE_MAP.put("mp4", "video/mp4");
-        EXTENSION_TO_MIME_TYPE_MAP.put("mpeg", "video/mpeg");
+        EXTENSION_TO_MIME_TYPE_MAP.put("mpeg", "video/mp2p");
         EXTENSION_TO_MIME_TYPE_MAP.put("mpg", "video/mpeg");
         EXTENSION_TO_MIME_TYPE_MAP.put("mkv", "video/x-matroska");
         EXTENSION_TO_MIME_TYPE_MAP.put("mpe", "video/mpeg");
@@ -75,9 +75,9 @@ public class MimeTypeUtils {
         EXTENSION_TO_MIME_TYPE_MAP.put("qt", "video/quicktime");
         EXTENSION_TO_MIME_TYPE_MAP.put("m4v", "video/x-m4v");
         EXTENSION_TO_MIME_TYPE_MAP.put("wmv", "video/x-ms-wmv");
-        EXTENSION_TO_MIME_TYPE_MAP.put("avi", "video/x-msvideo");
+        EXTENSION_TO_MIME_TYPE_MAP.put("avi", "video/avi");
         EXTENSION_TO_MIME_TYPE_MAP.put("webm", "video/webm");
-        EXTENSION_TO_MIME_TYPE_MAP.put("flv", "video/x-flv");
+        EXTENSION_TO_MIME_TYPE_MAP.put("flv", "video/mp4");
 
         EXTENSION_TO_MIME_TYPE_MAP.put("evy", "application/envoy");
         EXTENSION_TO_MIME_TYPE_MAP.put("fif", "application/fractals");
@@ -230,6 +230,9 @@ public class MimeTypeUtils {
         EXTENSION_TO_MIME_TYPE_MAP.put("wrz", "x-world/x-vrml");
         EXTENSION_TO_MIME_TYPE_MAP.put("xaf", "x-world/x-vrml");
         EXTENSION_TO_MIME_TYPE_MAP.put("xof", "x-world/x-vrml");
+        EXTENSION_TO_MIME_TYPE_MAP.put("ts", "video/ts");
+        EXTENSION_TO_MIME_TYPE_MAP.put("m2ts", "video/mp2ts");
+        EXTENSION_TO_MIME_TYPE_MAP.put("3gp", "video/3gpp");
 
         EXTENSION_TO_MIME_TYPE_MAP.put("", "application/octet-stream");
 

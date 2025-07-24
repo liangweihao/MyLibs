@@ -17,10 +17,13 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class MediaUtils {
 
@@ -50,6 +53,32 @@ public class MediaUtils {
             e.fillInStackTrace();
             return new byte[0];
         }
+    }
+
+    @Nullable
+    public static String queryDisplayName(@NonNull Context context, @NonNull Uri uri) {
+        ContentResolver resolver = context.getContentResolver();
+        // 使用 try-with-resources 自动管理 Cursor 资源
+        try (Cursor cursor = resolver.query(uri,
+                new String[]{MediaStore.MediaColumns.DISPLAY_NAME,MediaStore.MediaColumns.TITLE},
+                null,
+                null,
+                null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
+                if (columnIndex != -1) {
+                    return cursor.getString(columnIndex);
+                }else {
+                    columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
+                    if (columnIndex != -1) {
+                        return cursor.getString(columnIndex);
+                    }
+                }
+            }
+        }catch (Throwable e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static Size queryResolution(Context context, Uri uri) {
@@ -114,6 +143,13 @@ public class MediaUtils {
     }
 
     public static String queryData(Context context, Uri uri) {
+        if (uri == null) {
+            return "";
+        }
+        if (Objects.equals(uri.getScheme(), "file")){
+
+            return new File(uri.getPath()).exists()?uri.getPath():"";
+        }
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = null;
         try {
@@ -127,7 +163,8 @@ public class MediaUtils {
             if (cursor != null) {
                 cursor.moveToFirst();
                 int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-                return cursor.getString(columnIndex);
+                String path = cursor.getString(columnIndex);
+                return new File(path).exists()?path:"";
             }
         } finally {
             if (cursor != null) {
