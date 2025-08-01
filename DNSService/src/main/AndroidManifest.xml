@@ -10,14 +10,17 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="DNS"
-            android:screenOrientation="portrait"
+            android:label="@string/app_name"
+            android:icon="@drawable/icon_launcher"
             android:theme="@style/MainTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <provider
+            android:authorities="dnsservice"
+            android:name="com.nothing.commonutils.InitProvider"/>
     </application>
 
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
