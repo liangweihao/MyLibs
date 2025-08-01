@@ -1,20 +1,20 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id "org.jetbrains.kotlin.kapt"
     id 'maven-publish'
 }
 
-
-
+def nameSpace = "com.common.nothing.jmdns"
+def projectName = "jmdns"
+def versionAAR = "1.0.0"
 
 afterEvaluate {
     publishing {
         publications {
             maven2(MavenPublication) {
-                groupId = 'com.common.nothing.jsdns'
-                artifactId = 'jmdns'
-                version = '1.0.1'
+                groupId = nameSpace
+                artifactId = projectName
+                version = versionAAR
             }
         }
         repositories {
@@ -35,19 +35,18 @@ afterEvaluate {
         }
     }
 }
+
 android {
     compileSdk configCompileSDK
-    namespace 'com.common.nothing.uiwidget'
+    namespace nameSpace
     defaultConfig {
         minSdk configMinSDK
-//        targetSdk configTargetSDK
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
-        phone{
+        debug {
             minifyEnabled false
             debuggable true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -59,23 +58,26 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    kotlinOptions {
+        jvmTarget = '17'
+    }
     compileOptions {
         sourceCompatibility javaSDK
         targetCompatibility javaSDK
     }
-    buildFeatures {
-//        dataBinding = true
-//        buildConfig true
+    buildFeatures {}
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
     }
-
 }
 
 dependencies {
+    implementation project(':common')
 
+    implementation 'dnsjava:dnsjava:3.6.3'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
 
 }
-
-
-
-
