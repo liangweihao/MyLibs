@@ -1,5 +1,6 @@
 package com.nothing.commonutils.utils;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -262,10 +263,18 @@ public class MimeTypeUtils {
         return MIME_TYPE_TO_EXTENSION_MAP.getOrDefault(mimeType,"application/octet-stream");
     }
 
+    @Deprecated
     public static String getFileExtension(String filePath) {
         int dotIndex = filePath.lastIndexOf('.');
         if (dotIndex > 0 && dotIndex < filePath.length() - 1) {
             return filePath.substring(dotIndex + 1).toLowerCase();
+        }
+        return "";
+    }
+    public static String getFileExtension(File file) {
+        int dotIndex = file.getName().lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < file.getName().length() - 1) {
+            return file.getName().substring(dotIndex + 1).toLowerCase();
         }
         return "";
     }
