@@ -26,6 +26,7 @@ public class MainScanViewModel(application: Application) : AndroidViewModel(appl
 
     // 用于存储网络地址信息
     val inetAddresses = mutableStateListOf<String>()
+    @Deprecated("")
     var currentServiceInfo: ServiceInfo? = null
 
     // 用于存储服务解析信息
@@ -167,6 +168,8 @@ public class MainScanViewModel(application: Application) : AndroidViewModel(appl
         } ?: Result.failure(Throwable("ServerInfo is Null")))
     }
 
+
+
     /**
      * 下载文件的方法
      * @param ip 服务器 IP 地址
@@ -198,13 +201,39 @@ public class MainScanViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
+    suspend fun takeScreen(
+        ip: String,
+        port: Int,
+        destFile: File,
+        progress: (Int) -> Unit
+    ): Result<Unit> {
+        return kotlin.runCatching {
+            val url = HttpUrl.Builder().scheme("http").host(ip).port(port).build()
+            val api = RetrofitClient.getServerAPI(url)
+            val call = api.getScreenshot()
+            val response = call.execute()
+
+            if (response.isSuccessful) {
+                response.body()?.let { body ->
+                    saveFile(body, destFile.outputStream(), progress = progress)
+                } ?: throw IOException("Response body is null")
+            } else {
+                throw IOException("HTTP request failed with code ${response.code()}")
+            }
+        }
+    }
+
     /**
      * 将响应体保存到本地文件
      * @param body 响应体
      * @param destFile 保存的目标文件
      */
     @Throws
-    private suspend fun saveFile(body: ResponseBody, outputStream: OutputStream,progress: (Int)->Unit) {
+    private suspend fun saveFile(
+        body: ResponseBody,
+        outputStream: OutputStream,
+        progress: (Int) -> Unit
+    ) {
         try {
             val inputStream = body.byteStream()
             val buffer = ByteArray(4096)

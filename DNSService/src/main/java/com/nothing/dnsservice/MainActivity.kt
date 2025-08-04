@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -28,11 +29,22 @@ import com.nothing.commonutils.utils.Lg
 import com.nothing.dnsservice.home.FileListScreen
 import com.nothing.dnsservice.home.MainScanViewModel
 import com.nothing.dnsservice.home.MainScreen
+import com.nothing.dnsservice.home.ScreenShootPreviewScreen
+import com.nothing.dnsservice.server.bean.FileInfo
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import java.io.File
 import javax.jmdns.ServiceInfo
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.net.Uri
+import android.provider.MediaStore
+import com.nothing.commonutils.utils.MimeTypeUtils
+import java.io.FileInputStream
+import java.io.OutputStream
 
 private val LocalNavController =
     staticCompositionLocalOf<NavHostController> { throw Exception("LocalNavController not provided") }
@@ -45,8 +57,6 @@ private val LocalMainScanViewModel =
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
 
-    private val ROUTE_HOME = "home"
-    private val ROUTE_FILE_LIST = "file_list"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -72,6 +82,8 @@ class MainActivity : ComponentActivity() {
     @kotlinx.serialization.Serializable
     data class FileListRouter(var subDir: String, var external: Boolean)
 
+    @Serializable
+    data class ScreenShoot(var ip: String, var port: Int)
 
     @Composable
     fun InitContentView() {
@@ -98,53 +110,131 @@ class MainActivity : ComponentActivity() {
                         handlePrivateStorageClick(viewModel, navController, info)
                     }, { info ->
                         handleExternalStorageClick(viewModel, navController, info)
+                    }, { info ->
+                        handleScreenShootClick(viewModel, navController, info)
                     })
                 }
                 this.composable<FileListRouter> {
                     val router = it.toRoute<FileListRouter>()
                     FileListScreen(viewModel, router, { fileRouter ->
                         navController.navigate(fileRouter)
-                    }, { rootPath, fileRouter ,loadingState->
-                        Lg.i(TAG, "${File(rootPath, fileRouter.path)}.  ${fileRouter}")
-                        loadingState.intValue = 0
-                        coroutineScope.launch(Dispatchers.IO) {
-                            val destFile = File(
-                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                File(fileRouter.path).name
-                            )
-                            viewModel.fetchCurrentServerInfoFile(
-                                File(
-                                    rootPath, fileRouter.path
-                                ).path,
-                                destFile, {progress ->
-                                    loadingState.intValue = progress
-                                }
-                            ).onSuccess {
-                                loadingState.intValue = -1
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(
-                                        this@MainActivity,
-                                        destFile.path,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }.onFailure {
-                                withContext(Dispatchers.Main){
-                                    Toast.makeText(
-                                        this@MainActivity,
-                                        "文件下载失败,请重试",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                }
-                                Lg.w(TAG, "download fail:${Lg.getStackTraceAsString(it)}")
-                            }
-                        }
+                    }, { rootPath, fileRouter, loadingState ->
+                        handleDownloadFile(
+                            rootPath, fileRouter, loadingState, coroutineScope, viewModel
+                        )
                     })
+                }
+                this.composable<ScreenShoot> {
+                    val screenShoot = it.toRoute<ScreenShoot>()
+                    ScreenShootPreviewScreen(viewModel, screenShoot) { file ->
+                        handleDownloadLocal(viewModel, coroutineScope, file)
+                    }
                 }
             }
         }
 
+    }
+
+    private fun handleDownloadLocal(
+        viewModel: MainScanViewModel, coroutineScope: CoroutineScope, file: File
+    ) {
+        coroutineScope.launch(Dispatchers.IO) {
+            val contentResolver: ContentResolver = contentResolver
+            val contentValues = ContentValues().apply {
+                put(
+                    MediaStore.MediaColumns.DISPLAY_NAME,
+                    "screenshot_${System.currentTimeMillis()}.jpg"
+                )
+                put(
+                    MediaStore.MediaColumns.MIME_TYPE,
+                    MimeTypeUtils.getMimeTypeByExtension(MimeTypeUtils.getFileExtension(file))
+                )
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+            }
+            val imageCollection =
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
+            try {
+                val uri: Uri? = contentResolver.insert(imageCollection, contentValues)
+                uri?.let {
+                    contentResolver.openOutputStream(it)?.use { outputStream ->
+                        FileInputStream(file).use { inputStream ->
+                            copyStream(inputStream, outputStream)
+                        }
+                        // 保存成功
+                        showToast("图片保存成功")
+                    }
+                    contentResolver.query(uri, null, null, null)?.apply {
+                        while (moveToNext()) {
+                            val dataIndex = getColumnIndex(MediaStore.Images.Media.DATA)
+                            val path = getString(dataIndex)
+                            Lg.i(TAG, "Save Path ${path}")
+                        }
+                    }?.close()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showToast("图片保存失败")
+            }
+        }
+
+    }
+
+    private fun copyStream(inputStream: FileInputStream, outputStream: OutputStream) {
+        val buffer = ByteArray(4096)
+        var bytesRead: Int
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+            outputStream.write(buffer, 0, bytesRead)
+        }
+    }
+
+    private suspend fun showToast(message: String) {
+        withContext(Dispatchers.Main) {
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun handleScreenShootClick(
+        viewModel: MainScanViewModel, navController: NavHostController, info: ServiceInfo
+    ) {
+        navController.navigate(ScreenShoot(info.inet4Addresses.first().hostAddress!!, info.port))
+    }
+
+    private fun handleDownloadFile(
+        rootPath: String,
+        fileRouter: FileInfo,
+        loadingState: MutableIntState,
+        coroutineScope: CoroutineScope,
+        viewModel: MainScanViewModel
+    ) {
+        Lg.i(TAG, "${File(rootPath, fileRouter.path)}.  ${fileRouter}")
+        loadingState.intValue = 0
+        coroutineScope.launch(Dispatchers.IO) {
+            val destFile = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                File(fileRouter.path).name
+            )
+            viewModel.fetchCurrentServerInfoFile(
+                File(
+                    rootPath, fileRouter.path
+                ).path, destFile, { progress ->
+                    loadingState.intValue = progress
+                }).onSuccess {
+                loadingState.intValue = -1
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity, destFile.path, Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }.onFailure {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity, "文件下载失败,请重试", Toast.LENGTH_SHORT
+                    ).show()
+                }
+                Lg.w(TAG, "download fail:${Lg.getStackTraceAsString(it)}")
+            }
+        }
     }
 
 
@@ -162,7 +252,6 @@ class MainActivity : ComponentActivity() {
         // 安全获取 IP 地址
 
         viewModel.currentServiceInfo = info
-
         navController.navigate(FileListRouter("", false))
 
     }

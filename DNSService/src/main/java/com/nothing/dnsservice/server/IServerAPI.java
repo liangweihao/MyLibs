@@ -24,5 +24,11 @@ public interface IServerAPI {
     @GET("download_file")
     public Call<ResponseBody> downloadFile(@Query("filePath") String filePath);
 
-
+    /**
+     * 请求服务器进行截图并下载截图文件
+     * @return 包含截图文件内容的响应体
+     */
+    @Streaming
+    @GET("screenshot")
+    Call<ResponseBody> getScreenshot();
 }
