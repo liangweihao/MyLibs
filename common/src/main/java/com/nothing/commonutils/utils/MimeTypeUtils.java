@@ -188,6 +188,7 @@ public class MimeTypeUtils {
         EXTENSION_TO_MIME_TYPE_MAP.put("ram", "audio/x-pn-realaudio");
         EXTENSION_TO_MIME_TYPE_MAP.put("jpe", "image/jpeg");
         EXTENSION_TO_MIME_TYPE_MAP.put("heic", "image/heic");
+        EXTENSION_TO_MIME_TYPE_MAP.put("heif", "image/heif");
         EXTENSION_TO_MIME_TYPE_MAP.put("jfif", "image/pipeg");
         EXTENSION_TO_MIME_TYPE_MAP.put("tif", "image/tiff");
         EXTENSION_TO_MIME_TYPE_MAP.put("tiff", "image/tiff");
