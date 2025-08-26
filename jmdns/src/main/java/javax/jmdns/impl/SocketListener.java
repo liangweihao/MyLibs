@@ -7,9 +7,6 @@ package javax.jmdns.impl;
 
 import com.nothing.commonutils.utils.Lg;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.Inet4Address;
@@ -20,7 +17,6 @@ import javax.jmdns.impl.constants.DNSConstants;
  * Listen for multicast packets.
  */
 class SocketListener extends Thread {
-    static Logger           logger = LoggerFactory.getLogger(SocketListener.class.getName());
 
     /**
      *
@@ -44,7 +40,7 @@ class SocketListener extends Thread {
                 // in order to allow other threads to get some cpu time
                 Thread.sleep(_jmDNSImpl._threadSleepDurationMs);
             } catch (InterruptedException e) {
-                logger.warn(this.getName() + ".run() interrupted ", e);
+                Lg.w(this.getName() , ".run() interrupted ", e);
                 Thread.currentThread().interrupt();
             }
         }
@@ -97,21 +93,17 @@ class SocketListener extends Thread {
                             this._jmDNSImpl.handleResponse(msg);
                         }
                     } else {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("{}.run() JmDNS in message with error code: {}", this.getName(), msg.print(true));
-                        }
+                        Lg.d(TAG,"{}.run() JmDNS in message with error code: {}", this.getName(), msg.print(true));
                     }
                 } catch (IOException e) {
-                    logger.warn(this.getName() + ".run() exception ", e);
+                    Lg.w(TAG,".run() exception ", e);
                 }
             }
         } catch (IOException e) {
             if (!this._jmDNSImpl.isCanceling() && !this._jmDNSImpl.isCanceled() && !this._jmDNSImpl.isClosing() && !this._jmDNSImpl.isClosed()) {
-                logger.warn(this.getName() + ".run() exception ", e);
                 this._jmDNSImpl.recover();
             }
         }
-        logger.trace("{}.run() exiting.", this.getName());
     }
 
     public JmDNSImpl getDns() {

@@ -4,8 +4,6 @@
 
 package javax.jmdns.impl.tasks;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -24,7 +22,6 @@ import javax.jmdns.impl.constants.DNSConstants;
  * The Responder sends a single answer for the specified service infos and for the host name.
  */
 public class Responder extends DNSTask {
-    static Logger             logger = LoggerFactory.getLogger(Responder.class.getName());
 
     /**
      *
@@ -83,7 +80,6 @@ public class Responder extends DNSTask {
 
         boolean iAmTheOnlyOne = true;
         for (DNSQuestion question : _in.getQuestions()) {
-            logger.trace("{}.start() question={}", this.getName(), question);
             iAmTheOnlyOne = question.iAmTheOnlyOne(this.getDns());
             if (!iAmTheOnlyOne) {
                 break;
@@ -93,7 +89,6 @@ public class Responder extends DNSTask {
         if (delay < 0) {
             delay = 0;
         }
-        logger.trace("{}.start() Responder chosen delay={}", this.getName(), delay);
 
         if (!this.getDns().isCanceling() && !this.getDns().isCanceled()) {
             timer.schedule(this, delay);
@@ -112,7 +107,6 @@ public class Responder extends DNSTask {
             try {
                 // Answer questions
                 for (DNSQuestion question : _in.getQuestions()) {
-                    logger.debug("{}.run() JmDNS responding to: {}", this.getName(), question);
 
                     // for unicast responses the question must be included
                     if (_unicast) {
@@ -128,13 +122,11 @@ public class Responder extends DNSTask {
                 for (DNSRecord knownAnswer : _in.getAnswers()) {
                     if (knownAnswer.isStale(now)) {
                         answers.remove(knownAnswer);
-                        logger.debug("{} - JmDNS Responder Known Answer Removed", this.getName());
                     }
                 }
 
                 // respond if we have answers
                 if (!answers.isEmpty()) {
-                    logger.debug("{}.run() JmDNS responding", this.getName());
 
                     DNSOutgoing out = new DNSOutgoing(DNSConstants.FLAGS_QR_RESPONSE | DNSConstants.FLAGS_AA, !_unicast, _in.getSenderUDPPayload());
                     if (_unicast) {
@@ -156,7 +148,6 @@ public class Responder extends DNSTask {
                 }
                 // this.cancel();
             } catch (Throwable e) {
-                logger.warn(this.getName() + "run() exception ", e);
                 this.getDns().close();
             }
         }

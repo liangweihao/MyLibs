@@ -27,7 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.nothing.commonutils.utils.Lg
 import com.nothing.dnsservice.home.FileListScreen
-import com.nothing.dnsservice.home.MainScanViewModel
+import com.nothing.dnsservice.home.vm.MainViewModel
 import com.nothing.dnsservice.home.MainScreen
 import com.nothing.dnsservice.home.ScreenShootPreviewScreen
 import com.nothing.dnsservice.server.bean.FileInfo
@@ -35,14 +35,41 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import java.io.File
 import javax.jmdns.ServiceInfo
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role.Companion.Button
+import androidx.compose.ui.unit.dp
 import com.nothing.commonutils.utils.MimeTypeUtils
+import com.nothing.dnsservice.home.DeviceInfoScreen
+import com.nothing.dnsservice.home.DeviceinfoScreen
+import com.nothing.dnsservice.home.InstalledAppScreen
+import com.nothing.dnsservice.home.ItemView
+import com.nothing.dnsservice.home.router.DeviceInfoRouter
+import com.nothing.dnsservice.home.router.FileListRouter
+import com.nothing.dnsservice.home.router.HomeRouter
+import com.nothing.dnsservice.home.router.InstallAppRouter
+import com.nothing.dnsservice.home.router.ScreenShootRouter
+import com.nothing.dnsservice.home.vm.ServiceDisplayInfo
+import com.nothing.dnsservice.utils.SizeAuto.adapt
 import java.io.FileInputStream
 import java.io.OutputStream
 
@@ -50,8 +77,8 @@ private val LocalNavController =
     staticCompositionLocalOf<NavHostController> { throw Exception("LocalNavController not provided") }
 
 
-private val LocalMainScanViewModel =
-    staticCompositionLocalOf<MainScanViewModel> { throw Exception("LocalMainScanViewModel not provided") }
+private val LocalMainViewModel =
+    staticCompositionLocalOf<MainViewModel> { throw Exception("LocalMainScanViewModel not provided") }
 
 
 class MainActivity : ComponentActivity() {
@@ -60,7 +87,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModel = ViewModelProvider(this)[MainScanViewModel::class]
+        val viewModel = ViewModelProvider(this)[MainViewModel::class]
 
         setContent {
             val navController = rememberNavController()
@@ -68,7 +95,7 @@ class MainActivity : ComponentActivity() {
             navController.setViewModelStore(this.viewModelStore)
             CompositionLocalProvider(
                 LocalNavController provides navController,
-                LocalMainScanViewModel provides viewModel,
+                LocalMainViewModel provides viewModel,
             ) {
                 InitContentView()
             }
@@ -76,18 +103,9 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    @kotlinx.serialization.Serializable
-    data class HomeRouter(var name: String)
-
-    @kotlinx.serialization.Serializable
-    data class FileListRouter(var subDir: String, var external: Boolean)
-
-    @Serializable
-    data class ScreenShoot(var ip: String, var port: Int)
-
     @Composable
     fun InitContentView() {
-        val viewModel = LocalMainScanViewModel.current
+        val viewModel = LocalMainViewModel.current
         val navController = LocalNavController.current
         var coroutineScope = rememberCoroutineScope()
         MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(primary = Color.Black)) {
@@ -106,37 +124,90 @@ class MainActivity : ComponentActivity() {
             ) {
 
                 this.composable<HomeRouter> {
-                    MainScreen(viewModel.inetAddresses, viewModel.serviceInfos, { info ->
-                        handlePrivateStorageClick(viewModel, navController, info)
-                    }, { info ->
-                        handleExternalStorageClick(viewModel, navController, info)
-                    }, { info ->
-                        handleScreenShootClick(viewModel, navController, info)
-                    })
+                    var itemBindMap = createMenuItemMap(viewModel, navController)
+                    MainScreen(
+                        viewModel.inetAddresses,
+                        viewModel.serviceInfos,
+                        bottomSheetMenu = { info, bottomSheet ->
+                            this.handleRenderMenuList(
+                                itemBindMap, info, bottomSheet
+                            )
+                        })
                 }
                 this.composable<FileListRouter> {
                     val router = it.toRoute<FileListRouter>()
-                    FileListScreen(viewModel, router, { fileRouter ->
-                        navController.navigate(fileRouter)
-                    }, { rootPath, fileRouter, loadingState ->
+                    FileListScreen(viewModel, router, onBack = {
+                        navController.popBackStack()
+                    }, { rootPath, fileInfo, loadingState ->
                         handleDownloadFile(
-                            rootPath, fileRouter, loadingState, coroutineScope, viewModel
+                            rootPath, fileInfo, loadingState, coroutineScope, viewModel, router
                         )
                     })
+
                 }
-                this.composable<ScreenShoot> {
-                    val screenShoot = it.toRoute<ScreenShoot>()
-                    ScreenShootPreviewScreen(viewModel, screenShoot) { file ->
+                this.composable<ScreenShootRouter> {
+                    val screenShootRouter = it.toRoute<ScreenShootRouter>()
+                    ScreenShootPreviewScreen(viewModel, screenShootRouter) { file ->
                         handleDownloadLocal(viewModel, coroutineScope, file)
                     }
                 }
+
+                this.composable<DeviceInfoRouter> {
+                    val toRoute = it.toRoute<DeviceInfoRouter>()
+                    DeviceinfoScreen(viewModel, toRoute)
+                }
+
+                this.composable<InstallAppRouter> {
+                    val toRoute = it.toRoute<InstallAppRouter>()
+                    InstalledAppScreen(viewModel, toRoute)
+                }
             }
         }
+    }
 
+
+    @Composable
+    private fun createMenuItemMap(
+        viewModel: MainViewModel, navController: NavHostController
+    ): LinkedHashMap<String, (ServiceInfo) -> Unit> {
+        var itemBindMap = LinkedHashMap<String, (ServiceInfo) -> Unit>()
+        itemBindMap["应用内部"] =
+            { handleApplicationPrivateStorageClick(viewModel, navController, it) }
+        itemBindMap["应用外部"] =
+            { handleApplicationExternalStorageClick(viewModel, navController, it) }
+        itemBindMap["设备信息"] = { handleDeviceInfoClick(viewModel, navController, it) }
+        itemBindMap["应用列表"] = { handleInstalledApp(viewModel, navController, it) }
+
+        itemBindMap["存储卡"] = { handleExternalStorageClick(viewModel, navController, it) }
+
+        itemBindMap["截图"] = { handleScreenShootClick(viewModel, navController, it) }
+        return itemBindMap
+    }
+
+    private fun handleInstalledApp(
+        viewModel: MainViewModel,
+        navController: NavHostController,
+        info: ServiceInfo
+    ) {
+        navController.navigate(InstallAppRouter(info.inet4Addresses.first().hostAddress, info.port))
+    }
+
+
+    private fun LazyListScope.handleRenderMenuList(
+        itemClick: LinkedHashMap<String, (ServiceInfo) -> Unit>,
+        info: ServiceDisplayInfo,
+        bottomSheet: MutableState<Boolean>
+    ) {
+        items(itemClick.keys.toList()) { item ->
+            ItemView(item) {
+                bottomSheet.value = false
+                itemClick[item]?.invoke(info.serviceInfo)
+            }
+        }
     }
 
     private fun handleDownloadLocal(
-        viewModel: MainScanViewModel, coroutineScope: CoroutineScope, file: File
+        viewModel: MainViewModel, coroutineScope: CoroutineScope, file: File
     ) {
         coroutineScope.launch(Dispatchers.IO) {
             val contentResolver: ContentResolver = contentResolver
@@ -195,17 +266,34 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleScreenShootClick(
-        viewModel: MainScanViewModel, navController: NavHostController, info: ServiceInfo
+        viewModel: MainViewModel, navController: NavHostController, info: ServiceInfo
     ) {
-        navController.navigate(ScreenShoot(info.inet4Addresses.first().hostAddress!!, info.port))
+        navController.navigate(
+            ScreenShootRouter(
+                info.inet4Addresses.first().hostAddress!!, info.port
+            )
+        )
     }
+
+
+    private fun handleDeviceInfoClick(
+        viewModel: MainViewModel, navController: NavHostController, info: ServiceInfo
+    ) {
+        navController.navigate(
+            DeviceInfoRouter(
+                info.inet4Addresses.first().hostAddress!!, info.port
+            )
+        )
+    }
+
 
     private fun handleDownloadFile(
         rootPath: String,
         fileRouter: FileInfo,
         loadingState: MutableIntState,
         coroutineScope: CoroutineScope,
-        viewModel: MainScanViewModel
+        viewModel: MainViewModel,
+        router: FileListRouter
     ) {
         Lg.i(TAG, "${File(rootPath, fileRouter.path)}.  ${fileRouter}")
         loadingState.intValue = 0
@@ -214,8 +302,8 @@ class MainActivity : ComponentActivity() {
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                 File(fileRouter.path).name
             )
-            viewModel.fetchCurrentServerInfoFile(
-                File(
+            viewModel.downloadFile(
+                router.ip, router.port, File(
                     rootPath, fileRouter.path
                 ).path, destFile, { progress ->
                     loadingState.intValue = progress
@@ -228,6 +316,7 @@ class MainActivity : ComponentActivity() {
                 }
             }.onFailure {
                 withContext(Dispatchers.Main) {
+
                     Toast.makeText(
                         this@MainActivity, "文件下载失败,请重试", Toast.LENGTH_SHORT
                     ).show()
@@ -246,24 +335,43 @@ class MainActivity : ComponentActivity() {
      * @param connectTimeMs 连接耗时的可变状态
      * @param loading 加载状态的可变状态
      */
-    private fun handlePrivateStorageClick(
-        viewModel: MainScanViewModel, navController: NavHostController, info: ServiceInfo
+    private fun handleApplicationPrivateStorageClick(
+        viewModel: MainViewModel, navController: NavHostController, info: ServiceInfo
     ) {
         // 安全获取 IP 地址
-
-        viewModel.currentServiceInfo = info
-        navController.navigate(FileListRouter("", false))
+        navController.navigate(
+            FileListRouter(
+                info.inet4Addresses.first().hostAddress!!, info.port, "", false, true, true
+            )
+        )
 
     }
 
-    private fun handleExternalStorageClick(
-        viewModel: MainScanViewModel, navController: NavHostController, info: ServiceInfo
+    private fun handleApplicationExternalStorageClick(
+        viewModel: MainViewModel, navController: NavHostController, info: ServiceInfo
     ) {
-        viewModel.currentServiceInfo = info
-        navController.navigate(FileListRouter("", true))
+        // 安全获取 IP 地址
+        navController.navigate(
+            FileListRouter(
+                info.inet4Addresses.first().hostAddress!!, info.port, "", true, true, true
+            )
+        )
+
+    }
+
+
+    private fun handleExternalStorageClick(
+        viewModel: MainViewModel, navController: NavHostController, info: ServiceInfo
+    ) {
+        navController.navigate(
+            FileListRouter(
+                info.inet4Addresses.first().hostAddress!!, info.port, "", true, false, true
+            )
+        )
     }
 
 }
+
 
 
 

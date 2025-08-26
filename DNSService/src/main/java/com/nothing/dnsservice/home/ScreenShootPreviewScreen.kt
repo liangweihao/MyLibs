@@ -1,7 +1,6 @@
 package com.nothing.dnsservice.home
 
 import android.app.Application
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +16,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,8 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.nothing.commonutils.utils.BitmapUtils
 import com.nothing.commonutils.utils.Lg
-import com.nothing.dnsservice.MainActivity
 import com.nothing.dnsservice.R
+import com.nothing.dnsservice.home.router.ScreenShootRouter
+import com.nothing.dnsservice.home.vm.MainViewModel
 import com.nothing.dnsservice.utils.SizeAuto.adapt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,8 +42,8 @@ private const val TAG = "ScreenShootPreviewScree"
 
 @Composable
 fun ScreenShootPreviewScreen(
-    viewModel: MainScanViewModel,
-    screenShoot: MainActivity.ScreenShoot,
+    viewModel: MainViewModel,
+    screenShootRouter: ScreenShootRouter,
     downloadClick: (File) -> Unit
 ) {
     var progress = remember { mutableIntStateOf(0) }
@@ -59,7 +56,7 @@ fun ScreenShootPreviewScreen(
         withContext(Dispatchers.IO) {
             val cacheDir = viewModel.getApplication<Application>().cacheDir
             val screenTemp = File(cacheDir, "screen_${System.currentTimeMillis()}.jpg")
-            viewModel.takeScreen(screenShoot.ip, screenShoot.port, screenTemp) {
+            viewModel.takeScreen(screenShootRouter.ip, screenShootRouter.port, screenTemp) {
                 Lg.i(TAG, "progress ${it}")
                 progress.intValue = it
             }

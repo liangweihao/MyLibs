@@ -4,8 +4,6 @@
 
 package javax.jmdns.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -42,7 +40,6 @@ import javax.jmdns.impl.util.ByteWrangler;
  * @author Arthur van Hoff, Jeff Sonstein, Werner Randelshofer, Victor Toni
  */
 public class ServiceInfoImpl extends ServiceInfo implements DNSListener, DNSStatefulObject {
-    private static Logger           logger = LoggerFactory.getLogger(ServiceInfoImpl.class.getName());
 
     private String                  _domain;
     private String                  _protocol;
@@ -700,7 +697,6 @@ public class ServiceInfoImpl extends ServiceInfo implements DNSListener, DNSStat
                 ByteWrangler.readProperties(properties, this.getTextBytes());
             } catch (final Exception exception) {
                 // We should get better logging.
-                logger.warn("Malformed TXT Field ", exception);
             }
             this._props = properties;
         }
@@ -719,9 +715,7 @@ public class ServiceInfoImpl extends ServiceInfo implements DNSListener, DNSStat
 
         // some logging for debugging purposes
         if ( !(dnsEntry instanceof DNSRecord) ) {
-            logger.trace("DNSEntry is not of type 'DNSRecord' but of type {}",
-                    null == dnsEntry ? "null" : dnsEntry.getClass().getSimpleName()
-            );
+
             return;
         }
 
@@ -764,7 +758,6 @@ public class ServiceInfoImpl extends ServiceInfo implements DNSListener, DNSStat
                     dns.handleServiceResolved(event);
                 }
             } else {
-                logger.debug("JmDNS not available.");
             }
         }
 
@@ -796,27 +789,22 @@ public class ServiceInfoImpl extends ServiceInfo implements DNSListener, DNSStat
 
                         // try to remove the expired IPv4 if it exists
                         if (_ipv4Addresses.remove(inet4Address)) {
-                            logger.debug("Removed expired IPv4: {}", inet4Address);
                             return true;
                         } else {
-                            logger.debug("Expired IPv4 not in this service: {}", inet4Address);
                         }
                     } else {    // IPv6
                         final Inet6Address inet6Address = (Inet6Address) address.getAddress();
 
                         // try to remove the expired IPv6 if it exists
                         if (_ipv6Addresses.remove(inet6Address)) {
-                            logger.debug("Removed expired IPv6: {}", inet6Address);
                             return true;
                         } else {
-                            logger.debug("Expired IPv6 not in this service: {}", inet6Address);
                         }
                     }
                 }
                 break;
             default:
                 // just log other record types which are not handled yet
-                logger.trace("Unhandled expired record: {}", record);
                 break;
         }
 

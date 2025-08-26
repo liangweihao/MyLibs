@@ -3,8 +3,6 @@
  */
 package javax.jmdns.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.EventListener;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +25,6 @@ import javax.jmdns.ServiceTypeListener;
 public class ListenerStatus<T extends EventListener> {
 
     public static class ServiceListenerStatus extends ListenerStatus<ServiceListener> {
-        private static Logger logger = LoggerFactory.getLogger(ServiceListenerStatus.class.getName());
 
         private final ConcurrentMap<String, ServiceInfo> _addedServices;
 
@@ -66,7 +63,6 @@ public class ListenerStatus<T extends EventListener> {
                     this.getListener().serviceResolved(event);
                 }
             } else {
-                logger.debug("Service Added called for a service already added: {}", event);
             }
         }
 
@@ -81,7 +77,6 @@ public class ListenerStatus<T extends EventListener> {
             if (_addedServices.remove(qualifiedName, _addedServices.get(qualifiedName))) {
                 this.getListener().serviceRemoved(event);
             } else {
-                logger.debug("Service Removed called for a service already removed: {}", event);
             }
         }
 
@@ -108,11 +103,8 @@ public class ListenerStatus<T extends EventListener> {
                         }
                     }
                 } else {
-                    logger.debug("Service Resolved called for a service already resolved: {}", event);
                 }
             } else {
-                logger.warn("Service Resolved called for an unresolved event: {}", event);
-
             }
         }
 
@@ -157,7 +149,6 @@ public class ListenerStatus<T extends EventListener> {
     }
 
     public static class ServiceTypeListenerStatus extends ListenerStatus<ServiceTypeListener> {
-        private static Logger                       logger = LoggerFactory.getLogger(ServiceTypeListenerStatus.class.getName());
 
         private final ConcurrentMap<String, String> _addedTypes;
 
@@ -182,7 +173,6 @@ public class ListenerStatus<T extends EventListener> {
             if (null == _addedTypes.putIfAbsent(event.getType(), event.getType())) {
                 this.getListener().serviceTypeAdded(event);
             } else {
-                logger.trace("Service Type Added called for a service type already added: {}", event);
             }
         }
 
@@ -200,7 +190,6 @@ public class ListenerStatus<T extends EventListener> {
             if (null == _addedTypes.putIfAbsent(event.getType(), event.getType())) {
                 this.getListener().subTypeForServiceTypeAdded(event);
             } else {
-                logger.trace("Service Sub Type Added called for a service sub type already added: {}", event);
             }
         }
 

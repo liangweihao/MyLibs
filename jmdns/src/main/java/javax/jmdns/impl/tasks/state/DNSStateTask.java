@@ -1,8 +1,6 @@
 // Licensed under Apache License version 2.0
 package javax.jmdns.impl.tasks.state;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,7 +21,6 @@ import javax.jmdns.impl.tasks.DNSTask;
  * @author Pierre Frisch
  */
 public abstract class DNSStateTask extends DNSTask {
-    static Logger      logger     = LoggerFactory.getLogger(DNSStateTask.class.getName());
 
     /**
      * By setting a 0 ttl we effectively expire the record.
@@ -110,7 +107,6 @@ public abstract class DNSStateTask extends DNSTask {
             // send probes for JmDNS itself
             synchronized (this.getDns()) {
                 if (this.getDns().isAssociatedWithTask(this, this.getTaskState())) {
-                    logger.debug("{}.run() JmDNS {} {}", this.getName(), this.getTaskDescription(), this.getDns().getName());
                     stateObjects.add(this.getDns());
                     out = this.buildOutgoingForDNS(out);
                 }
@@ -121,14 +117,12 @@ public abstract class DNSStateTask extends DNSTask {
 
                 synchronized (info) {
                     if (info.isAssociatedWithTask(this, this.getTaskState())) {
-                        logger.debug("{}.run() JmDNS {} {}",this.getName(), this.getTaskDescription(), info.getQualifiedName());
                         stateObjects.add(info);
                         out = this.buildOutgoingForInfo(info, out);
                     }
                 }
             }
             if (!out.isEmpty()) {
-                logger.debug("{}.run() JmDNS {} #{}", this.getName(), this.getTaskDescription(), this.getTaskState());
                 this.getDns().send(out);
 
                 // Advance the state of objects.
@@ -142,7 +136,6 @@ public abstract class DNSStateTask extends DNSTask {
                 return;
             }
         } catch (Throwable e) {
-            logger.warn(this.getName() + ".run() exception ", e);
             this.recoverTask(e);
         }
 

@@ -1,8 +1,6 @@
 // Licensed under Apache License version 2.0
 package javax.jmdns.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -33,7 +31,6 @@ public interface DNSStatefulObject {
      * @author Pierre Frisch
      */
     public static final class DNSStatefulObjectSemaphore {
-        private static Logger                          logger = LoggerFactory.getLogger(DNSStatefulObjectSemaphore.class.getName());
 
         private final String                           _name;
 
@@ -67,7 +64,6 @@ public interface DNSStatefulObject {
             try {
                 semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException exception) {
-                logger.debug("Exception ", exception);
             }
         }
 
@@ -105,7 +101,6 @@ public interface DNSStatefulObject {
     }
 
     public static class DefaultImplementation extends ReentrantLock implements DNSStatefulObject {
-        private static Logger                    logger           = LoggerFactory.getLogger(DefaultImplementation.class.getName());
 
         private static final long                serialVersionUID = -3264781576883412227L;
 
@@ -224,7 +219,6 @@ public interface DNSStatefulObject {
                     if (this._task == task) {
                         this.setState(this._state.advance());
                     } else {
-                        logger.warn("Trying to advance state whhen not the owner. owner: {} perpetrator: {}", this._task, task);
                     }
                 } finally {
                     this.unlock();
@@ -388,9 +382,7 @@ public interface DNSStatefulObject {
                 _announcing.waitForEvent(10);
                 if (!this.isAnnounced()) {
                     if (this.willCancel() || this.willClose()) {
-                        logger.debug("Wait for announced cancelled: {}", this);
                     } else {
-                        logger.warn("Wait for announced timed out: {}", this);
                     }
                 }
             }
@@ -409,7 +401,6 @@ public interface DNSStatefulObject {
                 // When we run multihomed we need to check twice
                 _canceling.waitForEvent(10);
                 if (!this.isCanceled() && !this.willClose()) {
-                    logger.warn("Wait for canceled timed out: {}", this);
                 }
             }
             return this.isCanceled();

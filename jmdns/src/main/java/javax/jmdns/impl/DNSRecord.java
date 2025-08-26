@@ -4,8 +4,6 @@
 
 package javax.jmdns.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -34,7 +32,6 @@ import javax.jmdns.impl.util.ByteWrangler;
  * @author Arthur van Hoff, Rick Blair, Werner Randelshofer, Pierre Frisch
  */
 public abstract class DNSRecord extends DNSEntry {
-    private static Logger logger = LoggerFactory.getLogger(DNSRecord.class.getName());
 
     private int           _ttl;
     private long          _created;
@@ -109,7 +106,6 @@ public abstract class DNSRecord extends DNSEntry {
             }
             return false;
         } catch (ArrayIndexOutOfBoundsException e) {
-            logger.warn("suppressedBy() message " + msg + " exception ", e);
             // msg.print(true);
             return false;
         }
@@ -292,7 +288,6 @@ public abstract class DNSRecord extends DNSEntry {
      * Address record.
      */
     public static abstract class Address extends DNSRecord {
-        private static Logger logger1 = LoggerFactory.getLogger(Address.class.getName());
 
         InetAddress           _addr;
 
@@ -306,7 +301,6 @@ public abstract class DNSRecord extends DNSEntry {
             try {
                 this._addr = InetAddress.getByAddress(rawAddress);
             } catch (UnknownHostException exception) {
-                logger1.warn("Address() exception ", exception);
             }
         }
 
@@ -333,7 +327,6 @@ public abstract class DNSRecord extends DNSEntry {
                 }
                 return this.getAddress().equals(address.getAddress());
             } catch (Exception e) {
-                logger1.info("Failed to compare addresses of DNSRecords", e);
                 return false;
             }
         }
@@ -374,11 +367,9 @@ public abstract class DNSRecord extends DNSEntry {
                         // With multiple interfaces on a single computer it is possible to see our
                         // own records come in on different interfaces than the ones they were sent on.
                         // see section "10. Conflict Resolution" of mdns draft spec.
-                        logger1.debug("handleQuery() Ignoring an identical address query");
                         return false;
                     }
 
-                    logger1.debug("handleQuery() Conflicting query detected.");
                     // Tie breaker test
                     if (dns.isProbing() && comparison > 0) {
                         // We lost the tie-break. We have to choose a different name.
@@ -402,7 +393,6 @@ public abstract class DNSRecord extends DNSEntry {
         @Override
         boolean handleResponse(JmDNSImpl dns) {
             if (dns.getLocalHost().conflictWithRecord(this)) {
-                logger1.debug("handleResponse() Denial detected");
 
                 if (dns.isProbing()) {
                     dns.getLocalHost().incrementHostName();
@@ -690,7 +680,6 @@ public abstract class DNSRecord extends DNSEntry {
      * Service record.
      */
     public static class Service extends DNSRecord {
-        private static Logger logger1 = LoggerFactory.getLogger(Service.class.getName());
         private final int     _priority;
         private final int     _weight;
         private final int     _port;
@@ -777,16 +766,13 @@ public abstract class DNSRecord extends DNSEntry {
         boolean handleQuery(JmDNSImpl dns, long expirationTime) {
             ServiceInfoImpl info = (ServiceInfoImpl) dns.getServices().get(this.getKey());
             if (info != null && (info.isAnnouncing() || info.isAnnounced()) && (_port != info.getPort() || !_server.equalsIgnoreCase(dns.getLocalHost().getName()))) {
-                logger1.debug("handleQuery() Conflicting probe detected from: {}", getRecordSource());
                 Service localService = new Service(info.getQualifiedName(), DNSRecordClass.CLASS_IN, DNSRecordClass.UNIQUE, DNSConstants.DNS_TTL, info.getPriority(), info.getWeight(), info.getPort(), dns.getLocalHost().getName());
 
                 // This block is useful for debugging race conditions when jmDNS is responding to itself.
                 try {
                     if (dns.getInetAddress().equals(getRecordSource())) {
-                        logger1.warn("Got conflicting probe from ourselves\nincoming: {}\nlocal   : {}", this.toString(), localService.toString());
                     }
                 } catch (IOException e) {
-                    logger1.warn("IOException", e);
                 }
 
                 int comparison = this.compareTo(localService);
@@ -796,7 +782,6 @@ public abstract class DNSRecord extends DNSEntry {
                     // With multiple interfaces on a single computer it is possible to see our
                     // own records come in on different interfaces than the ones they were sent on.
                     // see section "10. Conflict Resolution" of mdns draft spec.
-                    logger1.debug("handleQuery() Ignoring a identical service query");
                     return false;
                 }
 
@@ -807,7 +792,6 @@ public abstract class DNSRecord extends DNSEntry {
                     info.setName(NameRegister.Factory.getRegistry().incrementName(dns.getLocalHost().getInetAddress(), info.getName(), NameRegister.NameType.SERVICE));
                     dns.getServices().remove(oldName);
                     dns.getServices().put(info.getQualifiedName().toLowerCase(), info);
-                    logger1.debug("handleQuery() Lost tie break: new unique name chosen:{}", info.getName());
 
                     // We revert the state to start probing again with the new name
                     info.revertState();
@@ -827,14 +811,12 @@ public abstract class DNSRecord extends DNSEntry {
         boolean handleResponse(JmDNSImpl dns) {
             ServiceInfoImpl info = (ServiceInfoImpl) dns.getServices().get(this.getKey());
             if (info != null && (_port != info.getPort() || !_server.equalsIgnoreCase(dns.getLocalHost().getName()))) {
-                logger1.debug("handleResponse() Denial detected");
 
                 if (info.isProbing()) {
                     String oldName = info.getQualifiedName().toLowerCase();
                     info.setName(NameRegister.Factory.getRegistry().incrementName(dns.getLocalHost().getInetAddress(), info.getName(), NameRegister.NameType.SERVICE));
                     dns.getServices().remove(oldName);
                     dns.getServices().put(info.getQualifiedName().toLowerCase(), info);
-                    logger1.debug("handleResponse() New unique name chose:{}", info.getName());
 
                 }
                 info.revertState();

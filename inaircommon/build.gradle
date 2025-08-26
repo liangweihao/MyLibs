@@ -78,6 +78,7 @@ dependencies {
     implementation project(':common')
     implementation project(':refinvoke')
 
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
 }
 

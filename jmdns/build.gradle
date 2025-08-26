@@ -7,7 +7,16 @@ plugins {
 def nameSpace = "com.common.nothing.jmdns"
 def projectName = "jmdns"
 def versionAAR = "1.0.0"
-
+// 定义一个辅助方法来添加依赖节点
+def addDependencyToNode(def parentNode, def dep, def scope = null) {
+    def dependencyNode = parentNode.appendNode('dependency')
+    dependencyNode.appendNode('groupId', dep.group)
+    dependencyNode.appendNode('artifactId', dep.name)
+    dependencyNode.appendNode('version', dep.version)
+    if (scope != null) {
+        dependencyNode.appendNode('scope', scope)
+    }
+}
 afterEvaluate {
     publishing {
         publications {
@@ -15,7 +24,23 @@ afterEvaluate {
                 groupId = nameSpace
                 artifactId = projectName
                 version = versionAAR
+                // 将 from 方法移动到 MavenPublication 配置块内
+                from components.release
+                // 手动添加依赖信息
+                pom {
+                    packaging 'aar'
+                    withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+                        // 处理 api 依赖
+                        configurations.api.allDependencies.each { dep ->
+                            if (dep.group != null && dep.name != null && dep.version != null) {
+                                addDependencyToNode(dependenciesNode, dep, null)
+                            }
+                        }
+                    }
+                }
             }
+
         }
         repositories {
             maven {
@@ -76,7 +101,8 @@ android {
 dependencies {
     implementation project(':common')
 
-    implementation 'dnsjava:dnsjava:3.6.3'
+//  这个版本版衣的时候会提D8 导致无法编译  implementation 'dnsjava:dnsjava:3.6.3'
+//    implementation 'dnsjava:dnsjava:3.5.3'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
 

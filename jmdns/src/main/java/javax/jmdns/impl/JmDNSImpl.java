@@ -5,9 +5,6 @@
 package javax.jmdns.impl;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.Inet4Address;
@@ -63,7 +60,6 @@ import javax.jmdns.impl.util.NamedThreadFactory;
  * @author Arthur van Hoff, Rick Blair, Jeff Sonstein, Werner Randelshofer, Pierre Frisch, Scott Lewis, Kai Kreuzer, Victor Toni
  */
 public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarter  {
-    private static Logger logger = LoggerFactory.getLogger(JmDNSImpl.class.getName());
 
 
     public static String formatTimestamp(long timestamp, String pattern) {
@@ -424,7 +420,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
      */
     public JmDNSImpl(InetAddress address, String name, long threadSleepDurationMs) throws IOException {
         super();
-        logger.debug("JmDNS instance created");
 
         _cache = new DNSCache(100);
 
@@ -466,7 +461,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             try {
                 this.registerService(new ServiceInfoImpl(info));
             } catch (final Exception exception) {
-                logger.warn("start() Registration exception ", exception);
             }
         }
     }
@@ -496,12 +490,10 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             final SocketAddress multicastAddr = new InetSocketAddress(_group, DNSConstants.MDNS_PORT);
             _socket.setNetworkInterface(hostInfo.getInterface());
 
-            logger.trace("Trying to joinGroup({}, {})", multicastAddr, hostInfo.getInterface());
 
             // this joinGroup() might be less surprisingly so this is the default
             _socket.joinGroup(multicastAddr, hostInfo.getInterface());
         } else {
-            logger.trace("Trying to joinGroup({})", _group);
             _socket.joinGroup(_group);
         }
 
@@ -511,7 +503,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
     private void closeMulticastSocket() {
         // jP: 20010-01-18. See below. We'll need this monitor...
         // assert (Thread.holdsLock(this));
-        logger.debug("closeMulticastSocket()");
         if (_socket != null) {
             // close socket
             try {
@@ -532,7 +523,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                         try {
                             if (_incomingListener != null && _incomingListener.isAlive()) {
                                 // wait time is arbitrary, we're really expecting notification.
-                                logger.debug("closeMulticastSocket(): waiting for jmDNS monitor");
                                 this.wait(1000);
                             }
                         } catch (InterruptedException ignored) {
@@ -542,7 +532,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                 }
                 _incomingListener = null;
             } catch (final Exception exception) {
-                logger.warn("closeMulticastSocket() Close socket exception ", exception);
             }
             _socket = null;
         }
@@ -1055,7 +1044,7 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
 
         this.startProber();
 
-        logger.debug("registerService() JmDNS registered service as {}", info);
+
     }
 
     /**
@@ -1071,9 +1060,7 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             info.waitForCanceled(DNSConstants.CLOSE_TIMEOUT);
 
             _services.remove(info.getKey(), info);
-            logger.debug("unregisterService() JmDNS {} unregistered service as {}", this.getName(), info);
         } else {
-            logger.warn("{} removing unregistered service info: {}", this.getName(), infoAbstract.getKey());
         }
     }
 
@@ -1082,12 +1069,10 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
      */
     @Override
     public void unregisterAllServices() {
-        logger.debug("unregisterAllServices()");
 
         for (final ServiceInfo info : _services.values()) {
             if (info != null) {
                 final ServiceInfoImpl infoImpl = (ServiceInfoImpl) info;
-                logger.debug("Cancelling service info: {}", info);
                 infoImpl.cancelState();
             }
         }
@@ -1099,7 +1084,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                 final ServiceInfoImpl infoImpl = (ServiceInfoImpl) info;
                 final String name = entry.getKey();
 
-                logger.debug("Wait for service info cancel: {}", info);
                 infoImpl.waitForCanceled(DNSConstants.CLOSE_TIMEOUT);
                 _services.remove(name, info);
             }
@@ -1121,13 +1105,7 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
 
         final String name = (application.length() > 0 ? "_" + application + "." : "") + (protocol.length() > 0 ? "_" + protocol + "." : "") + domain + ".";
         final String loname = name.toLowerCase();
-        logger.debug("{} registering service type: {} as: {}{}{}",
-            this.getName(),
-            type,
-            name,
-            (subtype.length() > 0 ? " subtype: " : ""),
-            (subtype.length() > 0 ? subtype : "")
-        );
+
         if (!_serviceTypes.containsKey(loname) && !application.toLowerCase().equals("dns-sd") && !domain.toLowerCase().endsWith("in-addr.arpa") && !domain.toLowerCase().endsWith("ip6.arpa")) {
             typeAdded = _serviceTypes.putIfAbsent(loname, new ServiceTypeEntry(name)) == null;
             if (typeAdded) {
@@ -1187,12 +1165,7 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                 if (DNSRecordType.TYPE_SRV.equals(dnsEntry.getRecordType()) && !dnsEntry.isExpired(now)) {
                     final DNSRecord.Service s = (DNSRecord.Service) dnsEntry;
                     if (s.getPort() != info.getPort() || !s.getServer().equals(_localHost.getName())) {
-                        logger.debug("makeServiceNameUnique() JmDNS.makeServiceNameUnique srv collision:{} s.server={} {} equals:{}",
-                                dnsEntry,
-                                s.getServer(),
-                                _localHost.getName(),
-                                s.getServer().equals(_localHost.getName())
-                        );
+
                         info.setName(NameRegister.Factory.getRegistry().incrementName(_localHost.getInetAddress(), info.getName(), NameRegister.NameType.SERVICE));
                         collision = true;
                         break;
@@ -1319,12 +1292,7 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             } else {
                 serviceListenerList = Collections.emptyList();
             }
-            logger.trace("{}.updating record for event: {} list {} operation: {}",
-                this.getName(),
-                event,
-                serviceListenerList,
-                operation
-            );
+
             if (!serviceListenerList.isEmpty()) {
                 final ServiceEvent localEvent = event;
 
@@ -1381,13 +1349,11 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
 
         Operation cacheOperation = Operation.Noop;
         final boolean expired = newRecord.isExpired(now);
-        logger.debug("{} handle response: {}", this.getName(), newRecord);
 
         // update the cache
         if (!newRecord.isServicesDiscoveryMetaQuery() && !newRecord.isDomainDiscoveryQuery()) {
             final boolean unique = newRecord.isUnique();
             final DNSRecord cachedRecord = (DNSRecord) this.getCache().getDNSEntry(newRecord);
-            logger.debug("{} handle response cached record: {}", this.getName(), cachedRecord);
             // RFC 6762, section 10.2 Announcements to Flush Outdated Cache Entries
             // https://tools.ietf.org/html/rfc6762#section-10.2
             // if (cache-flush a.k.a unique), remove all existing records matching these criterias :--
@@ -1401,7 +1367,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                             newRecord.getRecordClass().equals(entry.getRecordClass()) &&
                             isOlderThanOneSecond( (DNSRecord)entry, now )                            
                     ) {
-                        logger.trace("setWillExpireSoon() on: {}", entry);
                         // this set ttl to 1 second,
                         ((DNSRecord) entry).setWillExpireSoon(now);  
                     }
@@ -1412,12 +1377,10 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                     // if the record has a 0 ttl that means we have a cancel record we need to delay the removal by 1s
                     if (newRecord.getTTL() == 0) {
                         cacheOperation = Operation.Noop;
-                        logger.trace("Record is expired - setWillExpireSoon() on:\n\t{}", cachedRecord);
                         cachedRecord.setWillExpireSoon(now);
                         // the actual record will be disposed of by the record reaper.
                     } else {
                         cacheOperation = Operation.Remove;
-                        logger.trace("Record is expired - removeDNSEntry() on:\n\t{}", cachedRecord);
                         this.getCache().removeDNSEntry(cachedRecord);
                     }
                 } else {
@@ -1430,12 +1393,10 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                     ) {
                         if (newRecord.isSingleValued()) {
                             cacheOperation = Operation.Update;
-                            logger.trace("Record (singleValued) has changed - replaceDNSEntry() on:\n\t{}\n\t{}", newRecord, cachedRecord);
                             this.getCache().replaceDNSEntry(newRecord, cachedRecord);
                         } else {
                             // Address record can have more than one value on multi-homed machines
                             cacheOperation = Operation.Add;
-                            logger.trace("Record (multiValue) has changed - addDNSEntry on:\n\t{}", newRecord);
                             this.getCache().addDNSEntry(newRecord);
                         }
                     } else {
@@ -1446,7 +1407,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             } else {
                 if (!expired) {
                     cacheOperation = Operation.Add;
-                    logger.trace("Record not cached - addDNSEntry on:\n\t{}", newRecord);
                     this.getCache().addDNSEntry(newRecord);
                 }
             }
@@ -1518,7 +1478,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
     /**
      * In case the a record is received before the srv record the ip address would not be set.
      * <p>
-     * Wireshark record: see also file a_record_before_srv.pcapng and {@link ServiceInfoImplTest#test_ip_address_is_set()}
      * <p>
      * Multicast Domain Name System (response)
      * Transaction ID: 0x0000
@@ -1566,7 +1525,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
      * @exception IOException
      */
     void handleQuery(DNSIncoming in, InetAddress addr, int port) throws IOException {
-        logger.debug("{} handle query: {}", this.getName(), in);
         // Track known answers
         boolean conflictDetected = false;
         final long expirationTime = System.currentTimeMillis() + DNSConstants.KNOWN_ANSWER_TTL;
@@ -1663,16 +1621,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             byte[] message = out.data();
             final DatagramPacket packet = new DatagramPacket(message, message.length, addr, port);
 
-            if (logger.isTraceEnabled()) {
-                try {
-                    final DNSIncoming msg = new DNSIncoming(packet);
-                    if (logger.isTraceEnabled()) {
-                        logger.trace("send({}) JmDNS out:{}", this.getName(), msg.print(true));
-                    }
-                } catch (final IOException e) {
-                    logger.debug(getClass().toString(), ".send(" + this.getName() + ") - JmDNS can not parse what it sends!!!", e);
-                }
-            }
             final MulticastSocket ms = _socket;
             if (ms != null && !ms.isClosed()) {
                 ms.send(packet);
@@ -1820,7 +1768,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
      * Recover jmDNS when there is an error.
      */
     public void recover() {
-        logger.debug("{}.recover()", this.getName());
         // We have an IO error so lets try to recover if anything happens lets close it.
         // This should cover the case of the IP address changing under our feet
         if (this.isClosing() || this.isClosed() || this.isCanceling() || this.isCanceled()) {
@@ -1834,7 +1781,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             // This protects against recursive calls
             if (this.cancelState()) {
                 final String newThreadName = this.getName() + ".recover()";
-                logger.debug("{} thread {}", newThreadName, Thread.currentThread().getName());
                 Thread recover = new Thread(newThreadName) {
                     /**
                      * {@inheritDoc}
@@ -1851,10 +1797,7 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
 
     void __recover() {
         // Synchronize only if we are not already in process to prevent dead locks
-        //
-        logger.debug("{}.recover() Cleanning up", this.getName());
 
-        logger.warn("RECOVERING");
         // Purge the timer
         this.purgeTimer();
 
@@ -1876,7 +1819,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
 
         //
         this.getCache().clear();
-        logger.debug("{}.recover() All is clean", this.getName());
 
         if (this.isCanceled()) {
             //
@@ -1891,12 +1833,9 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                 this.openMulticastSocket(this.getLocalHost());
                 this.start(oldServiceInfos);
             } catch (final Exception exception) {
-                logger.warn(this.getName() + ".recover() Start services exception ", exception);
             }
-            logger.warn("{}.recover() We are back!", this.getName());
         } else {
             // We have a problem. We could not clear the state.
-            logger.warn("{}.recover() Could not recover we are Down!", this.getName());
             if (this.getDelegate() != null) {
                 this.getDelegate().cannotRecoverFromIOError(this.getDns(), oldServiceInfos);
             }
@@ -1925,7 +1864,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                 final DNSRecord record = (DNSRecord) entry;
                 if (record.isExpired(now)) {
                     this.updateRecord(now, record, Operation.Remove);
-                    logger.trace("Removing DNSEntry from cache: {}", entry);
                     this.getCache().removeDNSEntry(record);
                 } else if (record.isStaleAndShouldBeRefreshed(now)) {
                     record.incrementRefreshPercentage();
@@ -1937,8 +1875,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                     }
                 }
             } catch (Exception exception) {
-                logger.warn(this.getName() + ".Error while reaping records: " + entry, exception);
-                logger.warn(this.toString());
             }
         }
     }
@@ -1952,7 +1888,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             return;
         }
 
-        logger.debug("Cancelling JmDNS: {}", this);
 
         long start = System.currentTimeMillis();
         // Stop JmDNS
@@ -1961,7 +1896,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             // We got the tie break now clean up
 
             // Stop the timer
-            logger.debug("Canceling the timer");
             this.cancelTimer();
 
             // Cancel all services
@@ -1972,7 +1906,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             this.waitForCanceled(DNSConstants.CLOSE_TIMEOUT);
 
             // Stop the canceler timer
-            logger.debug("Canceling the state timer");
             this.cancelStateTimer();
 
             // Stop the executor
@@ -1991,7 +1924,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
             // now we must release the resources associated with the starter for this JmDNS instance
             Factory.getInstance().disposeStarter(this.getDns());
 
-            logger.debug("JmDNS closed.");
         }
         advanceState(null);
     }
@@ -2088,8 +2020,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
                 this.addServiceListener(type, collector, ListenerStatus.SYNCHRONOUS);
             }
         }
-        logger.debug("{}-collector: {}", this.getName(), collector);
-
         // At this stage the collector should never be null but it keeps findbugs happy.
         return (collector != null ? collector.list(timeout) : new ServiceInfo[0]);
     }
@@ -2132,7 +2062,6 @@ public class JmDNSImpl extends JmDNS implements DNSStatefulObject, DNSTaskStarte
      * @see #list
      */
     private void disposeServiceCollectors() {
-        logger.debug("disposeServiceCollectors()");
         for (final Map.Entry<String, ServiceCollector> entry : _serviceCollectors.entrySet()) {
             final ServiceCollector collector = entry.getValue();
             if (collector != null) {

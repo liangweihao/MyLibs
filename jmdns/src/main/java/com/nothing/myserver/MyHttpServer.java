@@ -3,9 +3,14 @@ package com.nothing.myserver;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 
 import com.nothing.commonutils.utils.Lg;
@@ -39,8 +44,8 @@ public class MyHttpServer extends NanoHTTPD {
     }
 
     private void registerActivityLife(Context context) {
-        if (context.getApplicationContext() instanceof Application) {
-            Application application = (Application) context.getApplicationContext();
+        // 使用模式变量替换显式类型转换
+        if (context.getApplicationContext() instanceof Application application) {
             application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                 @Override
                 public void onActivityCreated(
@@ -88,14 +93,11 @@ public class MyHttpServer extends NanoHTTPD {
         String uri = session.getUri();
 
         // 处理 /file_sdcard 或 /file_data 请求
-        if ("/file_sdcard".equals(uri) || "/file_data".equals(uri)) {
+        if ("/file_sdcard".equals(uri) || "/file_data".equals(uri) || "/file_external_data".equals(
+                uri)) {
             String subDir = getFirstParameterValue(session, "rootPath");
-            File baseDir =
-                    "/file_sdcard".equals(uri) ? new File(android.os.Environment.getExternalStorageDirectory()
-                            .getPath()) : context.getDataDir();
-
-            JSONObject jsonObject = createSubFileListJson(baseDir, subDir);
-            return createJsonResponse(Response.Status.OK, jsonObject);
+            JSONObject jsonObject = createSubFileListJson(uri, subDir);
+            return createJsonResponse(jsonObject);
         }
 
         // 处理 /download_file 请求
@@ -135,15 +137,170 @@ public class MyHttpServer extends NanoHTTPD {
                 }
             } catch (Exception e) {
                 return createTextResponse(
-                        Response.Status.METHOD_NOT_ALLOWED,
+                        Response.Status.NOT_FOUND,
                         "Error taking screenshot: " + e.getMessage()
                 );
             }
         }
+
+        // 处理 /device_info 请求
+        if ("/device_info".equals(uri)) {
+            try {
+                JSONObject deviceInfo = getDeviceInfo();
+                return createJsonResponse(deviceInfo);
+            } catch (JSONException e) {
+                return createTextResponse(
+                        Response.Status.NOT_FOUND,
+                        "Error getting device info: " + e.getMessage()
+                );
+            }
+        }
+
+        // 处理 /installed_apps 请求
+        if ("/installed_apps".equals(uri)) {
+            try {
+                JSONArray installedApps = getInstalledAppsInfo();
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("installed_apps", installedApps);
+                return createJsonResponse(jsonObject);
+            } catch (JSONException e) {
+                return createTextResponse(
+                        Response.Status.NOT_FOUND,
+                        "Error getting installed apps info: " + e.getMessage()
+                );
+            }
+        }
+
+        // 新增：处理 /download_apk 请求
+        if ("/download_apk".equals(uri)) {
+            String apkPath = getFirstParameterValue(session, "apkPath");
+            if (apkPath == null) {
+                return createTextResponse(
+                        Response.Status.BAD_REQUEST,
+                        "Missing 'apkPath' parameter"
+                );
+            }
+
+            File apkFile = new File(apkPath);
+            if (!apkFile.exists() || !apkFile.isFile()) {
+                return createTextResponse(Response.Status.NOT_FOUND, "APK file not found");
+            }
+
+            try {
+                return createApkResponse(apkFile);
+            } catch (FileNotFoundException e) {
+                return createTextResponse(Response.Status.NOT_FOUND, "Error opening APK file");
+            }
+        }
+
         return super.serve(session);
     }
 
 
+    /**
+     * 创建 APK 下载响应
+     *
+     * @param file 要下载的 APK 文件
+     * @return 固定长度的响应
+     * @throws FileNotFoundException 文件未找到异常
+     */
+    private Response createApkResponse(File file) throws FileNotFoundException {
+        return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/vnd.android.package-archive",
+                new FileInputStream(file),
+                file.length()
+        );
+    }
+
+
+    /**
+     * 获取设备信息
+     *
+     * @return 包含设备信息的 JSONObject
+     * @throws JSONException JSON 异常
+     */
+    @NonNull
+    private JSONObject getDeviceInfo() throws JSONException {
+        JSONObject deviceInfo = new JSONObject();
+        // 系统信息
+        deviceInfo.put("brand", Build.BRAND);
+        deviceInfo.put("model", Build.MODEL);
+        deviceInfo.put("device", Build.DEVICE);
+        deviceInfo.put("product", Build.PRODUCT);
+        deviceInfo.put("manufacturer", Build.MANUFACTURER);
+        deviceInfo.put("android_version", Build.VERSION.RELEASE);
+        deviceInfo.put("sdk_version", Build.VERSION.SDK_INT);
+
+        try {
+            String serial = Build.getSerial();
+            deviceInfo.put("serial_number", serial);
+        } catch (Exception e) {
+            // 增加 SN 获取字段
+            String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            deviceInfo.put("serial_number", androidId);
+         }
+
+        // 存储信息
+        deviceInfo.put("total_internal_storage", DeviceUtils.getTotalInternalStorage());
+        deviceInfo.put("available_internal_storage", DeviceUtils.getAvailableInternalStorage());
+        if (DeviceUtils.isExternalStorageAvailable()) {
+            deviceInfo.put("total_external_storage", DeviceUtils.getTotalExternalStorage());
+            deviceInfo.put("available_external_storage", DeviceUtils.getAvailableExternalStorage());
+        } else {
+            deviceInfo.put("external_storage_available", false);
+        }
+        // 内存信息
+        deviceInfo.put("total_ram", DeviceUtils.getTotalRam());
+        deviceInfo.put("available_ram", DeviceUtils.getAvailableRam());
+
+        return deviceInfo;
+    }
+
+    /**
+     * 获取已安装应用的信息
+     * @return 包含应用信息的 JSONArray
+     * @throws JSONException JSON 异常
+     */
+    private JSONArray getInstalledAppsInfo() throws JSONException {
+        JSONArray appList = new JSONArray();
+        PackageManager packageManager = context.getPackageManager();
+        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(0);
+
+        for (PackageInfo packageInfo : installedPackages) {
+            JSONObject appInfo = new JSONObject();
+            appInfo.put("package_name", packageInfo.packageName);
+            appInfo.put("app_name", packageManager.getApplicationLabel(packageInfo.applicationInfo).toString());
+            appInfo.put("version_name", packageInfo.versionName);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                appInfo.put("version_code", packageInfo.getLongVersionCode());
+            } else {
+                appInfo.put("version_code", packageInfo.versionCode);
+            }
+            appInfo.put("is_system_app", (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
+            // 获取应用 APK 文件路径
+            String apkPath = packageInfo.applicationInfo.sourceDir;
+            appInfo.put("app_path", apkPath);
+
+            // 判断是否能够下载 APK
+            boolean canDownloadApk = canDownloadApk(apkPath);
+            appInfo.put("can_download_apk", canDownloadApk);
+
+            appList.put(appInfo);
+        }
+        return appList;
+    }
+
+    /**
+     * 判断是否能够下载 APK 文件
+     * @param apkPath APK 文件的路径
+     * @return 能够下载返回 true，否则返回 false
+     */
+    private boolean canDownloadApk(String apkPath) {
+        File apkFile = new File(apkPath);
+        // 检查文件是否存在且为文件，并且应用有读取权限
+        return apkFile.exists() && apkFile.isFile() && apkFile.canRead();
+    }
     /**
      * 创建文件下载响应，并在响应结束后删除文件
      *
@@ -169,7 +326,7 @@ public class MyHttpServer extends NanoHTTPD {
     @Nullable
     private File takeScreenshot() {
         if (currentActivity == null) {
-            Lg.e(TAG,"Current Activity Is Null");
+            Lg.e("MyHttpServer", "Current Activity Is Null");
             return null;
         }
 
@@ -194,7 +351,7 @@ public class MyHttpServer extends NanoHTTPD {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
             fos.flush();
         } catch (IOException e) {
-            Lg.e(TAG,"take screen shoot fail ,%s",Lg.getStackTraceAsString(e));
+            Lg.e("MyHttpServer", "take screen shoot fail ,%s", Lg.getStackTraceAsString(e));
             return null;
         } finally {
             // 回收 Bitmap 资源
@@ -221,12 +378,11 @@ public class MyHttpServer extends NanoHTTPD {
     /**
      * 创建 JSON 响应
      *
-     * @param status     响应状态
      * @param jsonObject JSON 对象
      * @return 固定长度的响应
      */
-    private Response createJsonResponse(Response.Status status, JSONObject jsonObject) {
-        return newFixedLengthResponse(status, "application/json", jsonObject.toString());
+    private Response createJsonResponse(JSONObject jsonObject) {
+        return newFixedLengthResponse(Response.Status.OK, "application/json", jsonObject.toString());
     }
 
     /**
@@ -256,16 +412,21 @@ public class MyHttpServer extends NanoHTTPD {
         );
     }
 
-    private static final String TAG = "MyHttpServer";
-
     @NonNull
-    private JSONObject createSubFileListJson(File baseDir, @Nullable String rootPath) {
+    private JSONObject createSubFileListJson(String uri, @Nullable String rootPath) {
+        File baseDir = new File(android.os.Environment.getExternalStorageDirectory().getPath());
+
+        if ("/file_data".equals(uri)) {
+            baseDir = context.getDataDir();
+        } else if ("/file_external_data".equals(uri)) {
+            baseDir = Objects.requireNonNull(context.getExternalFilesDir(null)).getParentFile();
+        }
         File dataDir = new File(baseDir, TextUtils.isEmpty(rootPath) ? "" : rootPath);
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         if (dataDir.exists() && dataDir.isDirectory()) {
             for (File file : Objects.requireNonNull(dataDir.listFiles())) {
-                Lg.i(TAG, file.getPath());
+                Lg.i("MyHttpServer", file.getPath());
                 JSONObject object = new JSONObject();
                 try {
                     object.put("path", file.getPath());
@@ -279,7 +440,10 @@ public class MyHttpServer extends NanoHTTPD {
                     }
                 } catch (JSONException e) {
                     // 记录异常信息
-                    Lg.e(TAG, "JSONException in createSubFileListJson: " + e.getMessage());
+                    Lg.e(
+                            "MyHttpServer",
+                            "JSONException in createSubFileListJson: " + e.getMessage()
+                    );
                 }
                 jsonArray.put(object);
             }
@@ -289,7 +453,7 @@ public class MyHttpServer extends NanoHTTPD {
             jsonObject.put("rootPath", dataDir.getPath());
         } catch (JSONException e) {
             // 记录异常信息
-            Lg.e(TAG, "JSONException in createSubFileListJson: " + e.getMessage());
+            Lg.e("MyHttpServer", "JSONException in createSubFileListJson: " + e.getMessage());
         }
         return jsonObject;
     }

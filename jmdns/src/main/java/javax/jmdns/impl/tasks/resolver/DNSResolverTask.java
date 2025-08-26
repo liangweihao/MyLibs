@@ -1,8 +1,6 @@
 // Licensed under Apache License version 2.0
 package javax.jmdns.impl.tasks.resolver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -18,7 +16,6 @@ import javax.jmdns.impl.tasks.DNSTask;
  * @author Pierre Frisch
  */
 public abstract class DNSResolverTask extends DNSTask {
-    private static Logger logger = LoggerFactory.getLogger(DNSResolverTask.class.getName());
 
     /**
      * Counts the number of queries being sent.
@@ -65,7 +62,6 @@ public abstract class DNSResolverTask extends DNSTask {
                 this.cancel();
             } else {
                 if (_count++ < 3) {
-                    logger.debug("{}.run() JmDNS {}",this.getName(), this.description());
 
                     DNSOutgoing out = new DNSOutgoing(DNSConstants.FLAGS_QR_QUERY);
                     out = this.addQuestions(out);
@@ -81,7 +77,6 @@ public abstract class DNSResolverTask extends DNSTask {
                 }
             }
         } catch (Throwable e) {
-            logger.warn(this.getName() + ".run() exception ", e);
             this.getDns().recover();
         }
     }

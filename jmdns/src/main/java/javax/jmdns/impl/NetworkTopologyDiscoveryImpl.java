@@ -3,8 +3,7 @@
  */
 package javax.jmdns.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -21,7 +20,7 @@ import javax.jmdns.NetworkTopologyDiscovery;
  * @author Pierre Frisch
  */
 public class NetworkTopologyDiscoveryImpl implements NetworkTopologyDiscovery {
-    private final static Logger logger = LoggerFactory.getLogger(NetworkTopologyDiscoveryImpl.class.getName());
+
 
     /**
      *
@@ -43,14 +42,14 @@ public class NetworkTopologyDiscoveryImpl implements NetworkTopologyDiscovery {
                 NetworkInterface nif = nifs.nextElement();
                 for (Enumeration<InetAddress> iaenum = nif.getInetAddresses(); iaenum.hasMoreElements();) {
                     InetAddress interfaceAddress = iaenum.nextElement();
-                    logger.trace("Found NetworkInterface/InetAddress: {} -- {}",  nif , interfaceAddress);
+
                     if (useInetAddress(nif, interfaceAddress)) {
                         result.add(interfaceAddress);
                     }
                 }
             }
         } catch (SocketException se) {
-            logger.warn("Error while fetching network interfaces addresses: " + se);
+
         }
         return result.toArray(new InetAddress[result.size()]);
     }

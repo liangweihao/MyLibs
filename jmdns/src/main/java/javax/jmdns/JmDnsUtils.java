@@ -10,6 +10,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 
+import javax.jmdns.impl.JmmDNSImpl;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -47,16 +49,22 @@ public final class JmDnsUtils {
             return null;
         }
 
-        JmmDNS jmmDNS = getJmmDNSInstance();
-        if (jmmDNS == null) {
-            return null;
-        }
-
         int servicePort = findAvailablePort();
         if (servicePort == -1) {
             Lg.e(TAG, "Failed to find an available port.");
             return null;
         }
+
+        MyHttpServer myHttpServer = new MyHttpServer(context, servicePort);
+
+        JmmDNS jmmDNS = new JmmDNSImpl(){
+            @Override
+            public void close() throws IOException {
+                super.close();
+                myHttpServer.stop();
+            }
+        };
+
 
         try {
             ServiceInfo serviceInfo = ServiceInfo.create(
@@ -67,7 +75,8 @@ public final class JmDnsUtils {
             );
             jmmDNS.registerService(serviceInfo);
             jmmDNS.start();
-            new MyHttpServer(context, servicePort).start();
+            myHttpServer.start();
+
             Lg.i(TAG, "Service %s is now discoverable on port %d.", serviceName, servicePort);
             return jmmDNS;
         } catch (IOException e) {
@@ -127,10 +136,7 @@ public final class JmDnsUtils {
         }
 
 
-        JmmDNS jmmDNS = getJmmDNSInstance();
-        if (jmmDNS == null) {
-            return null;
-        }
+        JmmDNS jmmDNS = new JmmDNSImpl();
 
         try {
             ServiceInfo serviceInfo = ServiceInfo.create(
@@ -220,10 +226,7 @@ public final class JmDnsUtils {
             String serviceType,
             @Nullable JmDnsDiscoveryCallback callback
     ) {
-        JmmDNS jmmDNS = getJmmDNSInstance();
-        if (jmmDNS == null) {
-            return null;
-        }
+        JmmDNS jmmDNS = new JmmDNSImpl();
 
         try {
             jmmDNS.addServiceListener(
@@ -310,20 +313,5 @@ public final class JmDnsUtils {
         }
     }
 
-    /**
-     * 获取 JmmDNS 实例。
-     * <p>
-     * 可执行线程：非 UI 线程。创建 JmmDNS 实例可能涉及网络操作，
-     * 在 Android 等环境中不允许在 UI 线程执行。
-     *
-     * @return JmmDNS 实例，若获取失败则返回 null
-     */
-    private static JmmDNS getJmmDNSInstance() {
-        try {
-            return JmmDNS.Factory.newJmmDNS();
-        } catch (Throwable e) {
-            Lg.e(TAG, "Failed to create JmmDNS instance: %s", e.getLocalizedMessage());
-            return null;
-        }
-    }
+
 }

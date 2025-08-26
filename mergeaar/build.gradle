@@ -1,0 +1,69 @@
+plugins{
+    id 'com.android.fused-library'
+    id 'maven-publish'
+}
+
+
+def p = this.plugins.findPlugin('com.android.fused-library')
+for (def m in p.class.methods) {
+    println m.name
+}
+
+
+
+
+
+// 移除 android 块，因为 fused-library 不需要此配置
+// android {
+//     // 修改为使用 compileSdkVersion
+//     compileSdkVersion rootProject.ext.configCompileSDK
+//     namespace = "com.nothing.fusedlibrary"
+// }
+
+//androidFusedLibrary {
+//    namespace = "com.nothing.fusedlibrary"
+//    // 设置编译 SDK 版本
+//    compileSdkVersion rootProject.ext.configCompileSDK
+//    minSdk = 21
+//
+//    // 如果未显式指定 aarMetadata，将基于依赖生成 aar 元数据
+//    aarMetadata {
+//        minCompileSdk = 21
+//        minCompileSdkExtension = 1
+//    }
+//
+//    // 配置要合并的 AAR 依赖
+//    dependencies {
+//        // 这里添加你要合并的 AAR 依赖
+//        implementation project(':module1') // 示例：合并项目中的模块
+//        implementation 'com.example:library:1.0.0' // 示例：合并远程库
+//    }
+//}
+// ... 已有代码 ...
+//
+//publishing {
+//    publications {
+//        register("release") {
+//            groupId = "com.nothing.fusedlibrary"
+//            artifactId = "myfusedlibrary"
+//            version = "1.0"
+//            from(components["fusedLibraryComponent"])
+//        }
+//    }
+//    repositories {
+//        maven {
+//            url = 'https://packages.aliyun.com/maven/repository/2236604-release-GJXgei/'
+//            credentials {
+//                username = '5f963d8b18c17e7748e21932'
+//                password = 'GrkJhRnBbJ_S'
+//            }
+//        }
+//        maven {
+//            url = 'https://packages.aliyun.com/maven/repository/2236604-snapshot-ykFnBh/'
+//            credentials {
+//                username = '5f963d8b18c17e7748e21932'
+//                password = 'GrkJhRnBbJ_S'
+//            }
+//        }
+//    }
+//}

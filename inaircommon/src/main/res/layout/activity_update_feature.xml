@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_main_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/iv_feature_icon"
+        android:layout_width="100px"
+        android:layout_height="100px"
+        android:layout_marginTop="120px"
+        android:scaleType="fitCenter"
+        android:src="@color/cardview_dark_background" />
+
+    <TextView
+        android:id="@+id/tv_feature_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40px"
+        android:text="@string/title_application_update_feature"
+        android:textStyle="bold"
+        android:textFontWeight="700"
+        android:textColor="@android:color/black"
+        android:textSize="28px" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_feature_list"
+        android:layout_weight="1"
+        android:layout_marginTop="80px"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <TextView
+        android:id="@+id/tv_experience_now"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20px"
+        android:background="@drawable/application_feature_shape_apply"
+        android:text="@string/application_feature_apply"
+        android:padding="20px"
+        android:minWidth="272px"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:textStyle="bold"
+        android:includeFontPadding="false"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="80px"
+        android:textSize="24px" />
+
+</LinearLayout>

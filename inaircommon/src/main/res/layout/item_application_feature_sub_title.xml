@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center">
+
+    <LinearLayout
+        android:layout_width="500px"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="start|center_vertical"
+        android:layout_gravity="center"
+         >
+
+        <TextView
+            android:id="@+id/tv_feature_item_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:gravity="start|center_vertical"
+            android:textSize="22px"
+            android:textColor="@android:color/black" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_feature_item_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</FrameLayout>
