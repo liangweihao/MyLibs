@@ -4,12 +4,16 @@ package com.nothing.commonutils.utils;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Process;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -111,16 +115,25 @@ public class Lg {
             handlerThread.start();
             lgHandler = new Handler(handlerThread.getLooper());
             initFile(context);
+            Lg.i(TAG,"Init Process PID:%s", Process.myPid());
         } catch (Throwable e) {
             e.printStackTrace();
         }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                cleanExpiredLogs7DayBefore(context);
+            }
+        }).start();
     }
 
 
     public static void initFile(Context context){
 
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
             String timestamp = sdf.format(new Date());
             String fileName = timestamp + "_app_logs.txt";
             File logDir = new File(context.getExternalFilesDir(null).getParentFile(),"log");
@@ -177,6 +190,52 @@ public class Lg {
             }
         }));
 
+    }
+
+    // 添加清理过期日志的方法
+    private static void cleanExpiredLogs7DayBefore(Context context) {
+        try {
+            File logDir = new File(context.getExternalFilesDir(null).getParentFile(), "log");
+            if (!logDir.exists() || !logDir.isDirectory()) {
+                return;
+            }
+
+            // 获取一周前的时间戳（毫秒）
+            long oneWeekAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
+
+            File[] logFiles = logDir.listFiles((dir, name) -> name.endsWith("_app_logs.txt"));
+            if (logFiles == null) {
+                return;
+            }
+
+            for (File file : logFiles) {
+                // 尝试获取文件创建时间
+                try {
+                    Path filePath = file.toPath();
+                    BasicFileAttributes attrs = Files.readAttributes(filePath, BasicFileAttributes.class);
+                    long creationTime = attrs.creationTime().toMillis();
+
+                    if (creationTime < oneWeekAgo) {
+                        if (file.delete()) {
+                            Lg.i(TAG, "Deleted expired log file (by creation time): " + file.getName());
+                        } else {
+                            Lg.w(TAG, "Failed to delete expired log file (by creation time): " + file.getName());
+                        }
+                    }
+                } catch (Exception e) {
+                    // 获取创建时间失败，使用最后修改时间作为备选
+                    if (file.lastModified() < oneWeekAgo) {
+                        if (file.delete()) {
+                            Lg.i(TAG, "Deleted expired log file (by modify time): " + file.getName());
+                        } else {
+                            Lg.w(TAG, "Failed to delete expired log file (by modify time): " + file.getName());
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            Lg.e(TAG, "Error cleaning expired logs %s", e);
+        }
     }
 
 }
