@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id "org.jetbrains.kotlin.kapt"
     id 'maven-publish'
 }
 
@@ -84,7 +83,6 @@ dependencies {
 //    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation 'com.github.bumptech.glide:glide:4.13.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.13.0'
-    implementation "com.squareup.okhttp3:okhttp-bom:4.9.3"
     implementation "com.squareup.okhttp3:okhttp:4.9.3"
     implementation "com.squareup.okhttp3:logging-interceptor:4.9.3"
 //    implementation 'com.github.tbruyelle:rxpermissions:'

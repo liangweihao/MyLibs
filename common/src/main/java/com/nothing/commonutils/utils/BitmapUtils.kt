@@ -268,6 +268,10 @@ object BitmapUtils {
                 height = (height * 0.98f).toInt()
 
             }
+            var safeMaxHeight = maxHeight
+            if (maxHeight  > height){
+                safeMaxHeight = height
+            }
             // 无论小数点的状态 都向上取值 避免上面对于large的计算失效
             scale = Math.max(1, (oh / height))
             if ((ow * oh * 4) / scale > maxBitmapSize) {
@@ -282,7 +286,7 @@ object BitmapUtils {
             //性能下降： 缩放因子不是2的幂可能会导致系统执行更多的计算来调整图像的大小，这可能会增加处理时间，从而导致性能下降，特别是在大型图像上。
             scale = if (scale == 1) 1 else roundToEven(scale)
             options.inJustDecodeBounds = false
-            options.inPreferredConfig = Bitmap.Config.RGB_565
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888
             options.inSampleSize = scale
 //            options.inSampleSize = Math.ceil(Math.max(1f, (oh / height)).toDouble()).toInt()
             val inputStream = context.contentResolver.openInputStream(uri)
@@ -292,12 +296,12 @@ object BitmapUtils {
 
             // 格式化  最大的高度
             if (maxHeight != Int.MAX_VALUE) {
-                if (decodeBitmap.height > maxHeight) {
+                if (decodeBitmap.height != safeMaxHeight) {
                     var originBitmap = decodeBitmap
                     decodeBitmap = Bitmap.createScaledBitmap(
                         decodeBitmap,
-                        ((decodeBitmap.width.toFloat() * maxHeight) / decodeBitmap.height.toFloat()).toInt(),
-                        maxHeight, false
+                        ((decodeBitmap.width.toFloat() * safeMaxHeight) / decodeBitmap.height.toFloat()).toInt(),
+                        safeMaxHeight, false
                     )
                     originBitmap.recycle()
                 }

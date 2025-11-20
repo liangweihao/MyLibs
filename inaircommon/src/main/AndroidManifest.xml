@@ -4,6 +4,7 @@
     <application>
         <activity
             android:name="com.inair.versionupdate.NewFeatureActivity"
+            android:screenOrientation="landscape"
             android:exported="true" />
     </application>
 </manifest>

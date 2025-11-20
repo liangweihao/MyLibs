@@ -9,9 +9,9 @@
 
     <ImageView
         android:id="@+id/iv_feature_icon"
-        android:layout_width="100px"
-        android:layout_height="100px"
-        android:layout_marginTop="120px"
+        android:layout_width="@dimen/dp_100"
+        android:layout_height="@dimen/dp_100"
+        android:layout_marginTop="@dimen/dp_120"
         android:scaleType="fitCenter"
         android:src="@color/cardview_dark_background" />
 
@@ -19,17 +19,17 @@
         android:id="@+id/tv_feature_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40px"
+        android:layout_marginTop="@dimen/dp_40"
         android:text="@string/title_application_update_feature"
         android:textStyle="bold"
         android:textFontWeight="700"
         android:textColor="@android:color/black"
-        android:textSize="28px" />
+        android:textSize="@dimen/dp_28" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_feature_list"
         android:layout_weight="1"
-        android:layout_marginTop="80px"
+        android:layout_marginTop="@dimen/dp_80"
         android:overScrollMode="never"
         android:scrollbars="none"
         android:layout_width="match_parent"
@@ -40,17 +40,17 @@
         android:id="@+id/tv_experience_now"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20px"
+        android:layout_marginTop="@dimen/dp_20"
         android:background="@drawable/application_feature_shape_apply"
         android:text="@string/application_feature_apply"
-        android:padding="20px"
-        android:minWidth="272px"
+        android:padding="@dimen/dp_20"
+        android:minWidth="@dimen/dp_272"
         android:gravity="center"
         android:layout_gravity="center"
         android:textStyle="bold"
         android:includeFontPadding="false"
         android:textColor="@android:color/white"
-        android:layout_marginBottom="80px"
-        android:textSize="24px" />
+        android:layout_marginBottom="80dp"
+        android:textSize="@dimen/dp_24" />
 
 </LinearLayout>

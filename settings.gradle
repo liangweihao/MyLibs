@@ -68,3 +68,5 @@ include ':refinvoke'
 include ':app'
 include ':uiwidget'
 include ':jmdns'
+include ':DNSService'
+include ":mergeaar"

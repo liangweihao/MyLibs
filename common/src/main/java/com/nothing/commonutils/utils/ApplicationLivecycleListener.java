@@ -151,7 +151,6 @@ public class ApplicationLivecycleListener
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
         activities.add(activity);
-        DisplayUtils.INSTANCE.setDisplayMetrics(activity.getResources().getDisplayMetrics());
 
         if (activity instanceof FragmentActivity) {
             activity.getWindow().getDecorView().addOnLayoutChangeListener(this);
@@ -189,7 +188,7 @@ public class ApplicationLivecycleListener
         if (Enable) {
             Lg.i(TAG, "Resumed: %s@%d", activity.getLocalClassName(), activity.hashCode());
         }
-        DisplayUtils.INSTANCE.setDisplayMetrics(activity.getResources().getDisplayMetrics());
+
     }
 
     @Override

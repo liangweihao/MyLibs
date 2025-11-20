@@ -56,8 +56,10 @@ dependencies {
 
 
     implementation project(':common')
+    implementation project(':inaircommon')
 
 
+    implementation project(":jmdns")
     // opencv
     implementation group: 'org.opencv', name: 'opencv', version: '4.11.0'
 

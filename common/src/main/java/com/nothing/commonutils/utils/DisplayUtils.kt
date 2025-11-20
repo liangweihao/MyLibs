@@ -12,17 +12,18 @@ import androidx.fragment.app.FragmentActivity
 
 
 public object DisplayUtils {
-    var displayMetrics: DisplayMetrics? = null
-    fun Float.dp2px(): Float = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, this, if (displayMetrics != null) displayMetrics else Resources.getSystem().displayMetrics)
+    fun Float.dp2px(displayMetrics: DisplayMetrics): Float = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, this, displayMetrics
+    )
 
-    fun Float.dp2pxInt(): Int = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, this,if (displayMetrics != null) displayMetrics else Resources.getSystem().displayMetrics).toInt()
+    fun Float.dp2pxInt(displayMetrics: DisplayMetrics): Int = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, this, displayMetrics
+    ).toInt()
 
-    fun Int.sp2px(): Float = TypedValue.applyDimension(
+    fun Int.sp2px(displayMetrics: DisplayMetrics): Float = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_SP,
         this.toFloat(),
-        if (displayMetrics != null) displayMetrics else Resources.getSystem().displayMetrics
+        displayMetrics
     )
 
 

@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="start|center_vertical"
-        android:textSize="20px"
+        android:textSize="@dimen/dp_20"
         android:textColor="#80000000" />
 
 </FrameLayout>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_application_update_feature">アプリがアップグレードされました。新機能をチェックしてみましょう</string>
+    <string name="application_feature_apply">すぐに体験する</string>
+</resources>

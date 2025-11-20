@@ -213,22 +213,26 @@ public class EGLCoreUtils {
                     "}";
     private float yOffset = 0.0f;
 
-    public void setYOffset(float dy) {
+    public void offsetY(float dy) {
         this.yOffset+= dy;
     }
 
-    // 添加清除所有偏移的方法
     public void clearOffset() {
         this.yOffset = 0.0f;
     }
+
+    public void setOffsetY(float y) {
+        this.yOffset = y;
+    }
+
     private void drawImage(int textureId,int textureTarget) {
         // Define vertices for a rectangle
         float[] vertices = {
                 // X, Y, U, V
-                -1.0f,  1.0f + yOffset, 0.0f, 0.0f, // Top left with Y offset
-                -1.0f, -1.0f + yOffset, 0.0f, 1.0f, // Bottom left with Y offset
-                1.0f,  1.0f + yOffset, 1.0f, 0.0f, // Top right with Y offset
-                1.0f, -1.0f + yOffset, 1.0f, 1.0f  // Bottom right with Y offset
+                -1.0f,  1.0f + yOffset * 2, 0.0f, 0.0f, // Top left with Y offset
+                -1.0f, -1.0f + yOffset * 2, 0.0f, 1.0f, // Bottom left with Y offset
+                1.0f,  1.0f + yOffset * 2, 1.0f, 0.0f, // Top right with Y offset
+                1.0f, -1.0f + yOffset * 2, 1.0f, 1.0f  // Bottom right with Y offset
         };
         // 设置顶点
         // Load the vertex data into a buffer

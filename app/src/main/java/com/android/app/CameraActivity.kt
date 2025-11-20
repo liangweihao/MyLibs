@@ -2,23 +2,42 @@ package com.android.app
 
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
-import ai.onnxruntime.extensions.OrtxPackage
+import android.Manifest
+import android.app.Activity
+import android.content.ContentResolver
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.media.MediaMetadataRetriever
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import android.util.Size
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.android.app.databinding.ActivityMainBinding
+import com.inair.versionupdate.NewFeatureActivity
+import com.inair.versionupdate.UpdateGuideManager
+import com.nothing.commonutils.utils.Lg
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -32,10 +51,12 @@ import org.opencv.core.MatOfByte
 import org.opencv.imgcodecs.Imgcodecs
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
+import javax.jmdns.JmDnsUtils
 import kotlin.math.min
 
 
@@ -60,7 +81,7 @@ class CameraActivity : AppCompatActivity() {
     lateinit var ortSession: OrtSession
     var objectDetector = ObjectDetector()
 
-//    lateinit var glRender: CameraGLRenderer
+    //    lateinit var glRender: CameraGLRenderer
     var cameraExecutor = Executors.newSingleThreadExecutor();
     private var ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
 
@@ -69,6 +90,18 @@ class CameraActivity : AppCompatActivity() {
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
         OpenCVLoader.initLocal()
         setContentView(mainBinding.root)
+
+//        checkAndRequestPermissions()
+        requestQueryAllPackagesPermission(this)
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            JmDnsUtils.createContextClient(this@CameraActivity)
+        }
+
+        if (UpdateGuideManager.shouldShowUpdateGuide(this)) {
+            NewFeatureActivity.testNewFeatureActivityLaunch(this)
+        }
+
 //        val sessionOptions: OrtSession.SessionOptions = OrtSession.SessionOptions()
 //        sessionOptions.registerCustomOpLibrary(OrtxPackage.getLibraryPath())
 //        ortSession = ortEnv.createSession(readModel(), sessionOptions)
@@ -115,49 +148,187 @@ class CameraActivity : AppCompatActivity() {
 //            detect(toBitmap)
 //        }.start()
 
-        Thread{
+//        Thread{
+//
+//            val broker = "wss://ms.inair.cn:8084"
+//            val clientId = "demo_client"
+//
+//            val client: MqttClient = MqttClient(broker, clientId, MqttDefaultFilePersistence(filesDir.path))
+//            val options: MqttConnectOptions = MqttConnectOptions()
+//            options.userName = "inair"
+//            options.password = "duoping@123".toCharArray()
+//            client.setCallback(object :MqttCallback{
+//                override fun connectionLost(cause: Throwable?) {
+//                    Log.d(TAG, "connectionLost() called with: cause = $cause")
+//                }
+//
+//                override fun messageArrived(topic: String?, message: MqttMessage?) {
+//                    Log.d(TAG, "messageArrived() called with: topic = $topic, message = $message")
+//                }
+//
+//                override fun deliveryComplete(token: IMqttDeliveryToken?) {
+//                    Log.d(TAG, "deliveryComplete() called with: token = $token")
+//                }
+//
+//            })
+//            client.connect(options)
+//
+//            Log.i(TAG,"MQTT Client Result " + client.isConnected)
+//            val message = MqttMessage()
+//            message.payload = "testMessage ".toByteArray()
+//            message.qos = 1
+//            message.isRetained = true
+//            client.publish("test1",message)
+//        }.start()
 
-            val broker = "wss://ms.inair.cn:8084"
-            val clientId = "demo_client"
 
-            val client: MqttClient = MqttClient(broker, clientId, MqttDefaultFilePersistence(filesDir.path))
-            val options: MqttConnectOptions = MqttConnectOptions()
-            options.userName = "inair"
-            options.password = "duoping@123".toCharArray()
-            client.setCallback(object :MqttCallback{
-                override fun connectionLost(cause: Throwable?) {
-                    Log.d(TAG, "connectionLost() called with: cause = $cause")
+    }
+
+    // 在合适的 Activity 中请求权限
+    private final var REQUEST_QUERY_ALL_PACKAGES = 1;
+
+    private fun requestQueryAllPackagesPermission(activity:Activity)
+    {
+        if (ContextCompat.checkSelfPermission(
+                activity,
+                android.Manifest.permission.QUERY_ALL_PACKAGES
+            )
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf( android.Manifest.permission.QUERY_ALL_PACKAGES ),
+                REQUEST_QUERY_ALL_PACKAGES
+            );
+        }
+    }
+
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allPermissionsGranted = permissions.entries.all { it.value }
+        if (allPermissionsGranted) {
+            // 权限全部授予，可进行获取文件列表操作
+
+        } else {
+            // 有权限未授予，提示用户
+        }
+    }
+
+    private fun checkAndRequestPermissions() {
+        if (!isExternalStorageManager()) {
+            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            startActivity(intent)
+        } else {
+            // 已有权限，可进行获取文件列表操作
+
+        }
+    }
+
+    private fun isExternalStorageManager(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Settings.System.canWrite(this)
+        } else {
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun getVideoInfo(uri: Uri) {
+        val contentResolver: ContentResolver = contentResolver
+        val projection = arrayOf(
+            MediaStore.Video.Media.TITLE,
+            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DATE_ADDED
+        )
+
+        var cursor: Cursor? = null
+        try {
+            cursor = contentResolver.query(
+                uri,
+                projection,
+                null,
+                null,
+                null
+            )
+            cursor?.let {
+                if (it.moveToFirst()) {
+                    val titleIndex = it.getColumnIndex(MediaStore.Video.Media.TITLE)
+                    val durationIndex = it.getColumnIndex(MediaStore.Video.Media.DURATION)
+                    val sizeIndex = it.getColumnIndex(MediaStore.Video.Media.SIZE)
+                    val dateAddedIndex = it.getColumnIndex(MediaStore.Video.Media.DATE_ADDED)
+
+                    val title = it.getString(titleIndex)
+                    val duration = it.getLong(durationIndex)
+                    val size = it.getLong(sizeIndex)
+                    val dateAdded = it.getLong(dateAddedIndex)
+
+                    Lg.i(TAG, "Video Title: $title")
+                    Lg.i(TAG, "Video Duration: $duration ms")
+                    Lg.i(TAG, "Video Size: $size bytes")
+                    Lg.i(TAG, "Video Date Added: $dateAdded")
                 }
+            }
+        } catch (e: Exception) {
+            Lg.e(TAG, "Error getting video info: ${e.message}")
+        } finally {
+            cursor?.close()
+        }
+    }
 
-                override fun messageArrived(topic: String?, message: MqttMessage?) {
-                    Log.d(TAG, "messageArrived() called with: topic = $topic, message = $message")
+    private fun getVideoCover(uri: Uri): Bitmap? {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(this, uri)
+            // 获取第 1 帧作为封面
+            retriever.getFrameAtTime(10)
+        } catch (e: Exception) {
+            Lg.e(TAG, "Error getting video cover: ${e.message}")
+            null
+        } finally {
+            retriever.release()
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 19 && resultCode == Activity.RESULT_OK) {
+            data?.data?.let {
+                Lg.i(TAG, "onActivityResult: $it")
+                getVideoInfo(it)
+                getVideoCover(it)?.let { bitmap ->
+                    Toast.makeText(
+                        this,
+                        "bitmap  ${bitmap.width} ${bitmap.height}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Lg.i(TAG, "onActivityResult:bitmap  ${bitmap.width} ${bitmap.height}")
                 }
+            }
+        }
+    }
 
-                override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                    Log.d(TAG, "deliveryComplete() called with: token = $token")
-                }
-
-            })
-            client.connect(options)
-
-            Log.i(TAG,"MQTT Client Result " + client.isConnected)
-            val message = MqttMessage()
-            message.payload = "testMessage ".toByteArray()
-            message.qos = 1
-            message.isRetained = true
-            client.publish("test1",message)
-        }.start()
-
-
-
-
-
+    /**
+     * 打开视频选择器
+     */
+    private fun openVideoPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "video/*"
+        }
+        startActivityForResult(intent, 19)
     }
 
     private fun readModel(): ByteArray {
         val modelID = R.raw.yolo12n_detect
         return resources.openRawResource(modelID).readBytes()
     }
+
     // 类别映射
     val categoryMap = mapOf(
         0 to "person", 1 to "bicycle", 2 to "car", 3 to "motorcycle", 4 to "airplane",
@@ -179,6 +350,7 @@ class CameraActivity : AppCompatActivity() {
         74 to "clock", 75 to "vase", 76 to "scissors", 77 to "teddy bear",
         78 to "hair drier", 79 to "toothbrush"
     )
+
     private fun rotateBitmap(bitmap: Bitmap, degrees: Int): Bitmap {
         if (degrees == 0) return bitmap
         val matrix = Matrix()
@@ -186,12 +358,12 @@ class CameraActivity : AppCompatActivity() {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
-    private fun detect(inputBitmap: Bitmap){
+    private fun detect(inputBitmap: Bitmap) {
 
         var time = System.currentTimeMillis()
         var toBitmap = convertARGBToRGB565(inputBitmap)
         toBitmap = resizeBitmap(toBitmap, INPUT_IMG_WIDTH.toInt(), INPUT_IMG_HEIGHT.toInt())
-        Log.d(TAG,"Convert Bitmap ${System.currentTimeMillis() - time}ms")
+        Log.d(TAG, "Convert Bitmap ${System.currentTimeMillis() - time}ms")
         time = System.currentTimeMillis()
         try {
             val detect = objectDetector.detect(
@@ -199,7 +371,7 @@ class CameraActivity : AppCompatActivity() {
                 ortEnv,
                 ortSession
             )
-            Log.d(TAG,"Detect Bitmap ${System.currentTimeMillis() - time}ms")
+            Log.d(TAG, "Detect Bitmap ${System.currentTimeMillis() - time}ms")
             time = System.currentTimeMillis()
 
             val paint = Paint()
@@ -212,7 +384,7 @@ class CameraActivity : AppCompatActivity() {
             textPaint.color = Color.BLUE
             textPaint.textSize = 28f
             textPaint.textAlign = Paint.Align.CENTER
-            detect.output.forEach {  box ->
+            detect.output.forEach { box ->
                 val left = box.centerX - box.width / 2
                 val top = box.centerY - box.height / 2
                 val right = box.centerX + box.width / 2
@@ -230,14 +402,13 @@ class CameraActivity : AppCompatActivity() {
                 canvas.drawText(text, textX, textY, textPaint)
 
             }
-            Log.d(TAG,"Draw Bitmap ${System.currentTimeMillis() - time}ms")
+            Log.d(TAG, "Draw Bitmap ${System.currentTimeMillis() - time}ms")
             mainBinding.ivImg.post {
                 mainBinding.ivImg.setImageBitmap(toBitmap)
             }
         } catch (e: Throwable) {
             e.printStackTrace()
         }
-
 
 
     }
@@ -399,7 +570,7 @@ class CameraActivity : AppCompatActivity() {
 
     fun convertBitmapToInputStream(bitmap: Bitmap): InputStream {
         var outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG,100,outputStream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
         return ByteArrayInputStream(outputStream.toByteArray())
     }
 
