@@ -31,11 +31,16 @@ public class NewFeatureActivity extends FragmentActivity {
     private int appIconResId;
     // 新增字段，用于表示是否使用暗夜主题
     private boolean isDarkTheme;
+    String useNowTitle = "";
+    String title = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         appIconResId = getIntent().getIntExtra("app_icon_res_id", -1);
+
+        useNowTitle = getIntent().getStringExtra("useNowTitle");
+        title = getIntent().getStringExtra("title");
         featureList = getIntent().getParcelableArrayListExtra("feature_list");
         // 从 Intent 中获取是否为暗夜主题的信息
         isDarkTheme = getIntent().getBooleanExtra("is_dark_theme", false);
@@ -71,6 +76,8 @@ public class NewFeatureActivity extends FragmentActivity {
         experienceNowTextView = findViewById(R.id.tv_experience_now);
         featureTitleTextView = findViewById(R.id.tv_feature_title); // 初始化标题 TextView
         mainContainer = findViewById(R.id.ll_main_container); // 初始化主容器 LinearLayout
+        featureTitleTextView.setText(title);
+        experienceNowTextView.setText(useNowTitle);
     }
 
     private void initRecyclerView() {
@@ -79,7 +86,7 @@ public class NewFeatureActivity extends FragmentActivity {
         int spacingInPixels = 40;
         recyclerView.addItemDecoration(new ItemSpacingDecoration(spacingInPixels));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new NewFeatureAdapter(featureList,isDarkTheme);
+        adapter = new NewFeatureAdapter(featureList, isDarkTheme);
         recyclerView.setAdapter(adapter);
     }
 
@@ -111,12 +118,16 @@ public class NewFeatureActivity extends FragmentActivity {
      */
     public static Intent createIntent(
             Activity activity,
+            String title,
+            String useNowTitle,
             int appIconResId,
             List<NewFeatureModel> featureList,
             boolean isDarkTheme
     ) {
         Intent intent = new Intent(activity, NewFeatureActivity.class);
         intent.putExtra("app_icon_res_id", appIconResId);
+        intent.putExtra("title", title);
+        intent.putExtra("useNowTitle", useNowTitle);
         intent.putParcelableArrayListExtra("feature_list", new ArrayList<>(featureList));
         intent.putExtra("is_dark_theme", isDarkTheme);
         return intent;
@@ -132,11 +143,13 @@ public class NewFeatureActivity extends FragmentActivity {
      */
     public static void start(
             Activity activity,
+            String title,
+            String useNowTitle,
             int appIconResId,
             List<NewFeatureModel> featureList,
             boolean isDarkTheme
     ) {
-        Intent intent = createIntent(activity, appIconResId, featureList, isDarkTheme);
+        Intent intent = createIntent(activity, title, useNowTitle, appIconResId, featureList, isDarkTheme);
         activity.startActivity(intent);
     }
 
@@ -176,7 +189,7 @@ public class NewFeatureActivity extends FragmentActivity {
         boolean isDarkTheme = false;
 
         // 调用 start 方法启动 NewFeatureActivity
-        start(activity, appIconResId, featureList, isDarkTheme);
+        start(activity, "测试标题", "提交", appIconResId, featureList, isDarkTheme);
     }
 
 }

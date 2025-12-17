@@ -1,5 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="title_application_update_feature">应用已升级，看看新特性</string>
-    <string name="application_feature_apply">立即体验</string>
 </resources>

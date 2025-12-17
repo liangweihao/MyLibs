@@ -82,6 +82,27 @@ public class EGLCoreUtils {
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texId, 0);
         renderReady = true;
     }
+
+    public void clearGLContent() {
+        if (!this.renderReady) {
+            Lg.w("EGLCoreUtils", "clearGLContent: render not ready, skip clear", new Object[0]);
+            return;
+        }
+        // 1. 切换到当前EGL上下文（必须确保上下文正确）
+        this.outputEglCore.makeCurrent(this.outputEGLSurface);
+        // 2. 绑定帧缓冲（和绘制时使用同一帧缓冲）
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, this.framebufferId);
+        // 3. 清空颜色缓冲区（黑色透明背景，避免残留上一帧）
+        // GL_COLOR_BUFFER_BIT：清空颜色缓冲区
+        // GL_DEPTH_BUFFER_BIT：可选，若涉及深度测试需加
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // RGBA全0（透明黑）
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        // 4. 强制刷新，确保清空操作生效
+        GLES20.glFlush();
+        Lg.d("EGLCoreUtils", "clearGLContent: OpenGL content cleared", new Object[0]);
+    }
+
+
     // bitmap -> framebufferId -> textId -> EGLDisplay -> EGLClientBuffer -> HardwareBuffer
 
     // 绘制完成以后通知 Unity

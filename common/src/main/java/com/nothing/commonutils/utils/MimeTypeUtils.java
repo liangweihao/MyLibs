@@ -33,7 +33,7 @@ public class MimeTypeUtils {
         EXTENSION_TO_MIME_TYPE_MAP.put("jpeg", "image/jpeg");
         EXTENSION_TO_MIME_TYPE_MAP.put("jp2", "image/jp2");
         EXTENSION_TO_MIME_TYPE_MAP.put("png", "image/png");
-        EXTENSION_TO_MIME_TYPE_MAP.put("bmp", "image/bmp");
+        EXTENSION_TO_MIME_TYPE_MAP.put("bmp", "image/x-ms-bmp");
         EXTENSION_TO_MIME_TYPE_MAP.put("svg", "image/svg+xml");
         EXTENSION_TO_MIME_TYPE_MAP.put("webp", "image/webp");
         EXTENSION_TO_MIME_TYPE_MAP.put("ico", "image/x-icon");

@@ -234,6 +234,7 @@ object BitmapUtils {
         canvas.drawBitmap(bitmap, srcRect, destRect, paint)
     }
 
+    @Deprecated("频繁使用这个方法存在 内存无法回收问题 ")
     fun getSafeBitmap(context: Context, uri: Uri, maxHeight: Int = Int.MAX_VALUE): Bitmap? {
         var width: Int = 0
         var height: Int = 0
@@ -295,16 +296,14 @@ object BitmapUtils {
             var decodeBitmap = BitmapFactory.decodeStream(inputStream, null, options) ?: return null
 
             // 格式化  最大的高度
-            if (maxHeight != Int.MAX_VALUE) {
-                if (decodeBitmap.height != safeMaxHeight) {
-                    var originBitmap = decodeBitmap
-                    decodeBitmap = Bitmap.createScaledBitmap(
-                        decodeBitmap,
-                        ((decodeBitmap.width.toFloat() * safeMaxHeight) / decodeBitmap.height.toFloat()).toInt(),
-                        safeMaxHeight, false
-                    )
-                    originBitmap.recycle()
-                }
+            if (safeMaxHeight != Int.MAX_VALUE && decodeBitmap.height != safeMaxHeight) {
+                var originBitmap = decodeBitmap
+                decodeBitmap = Bitmap.createScaledBitmap(
+                    decodeBitmap,
+                    ((decodeBitmap.width.toFloat() * safeMaxHeight) / decodeBitmap.height.toFloat()).toInt(),
+                    safeMaxHeight, false
+                )
+                originBitmap.recycle()
             }
 
             val currentTimeMillis = System.currentTimeMillis()
