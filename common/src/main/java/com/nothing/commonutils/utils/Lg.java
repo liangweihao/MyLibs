@@ -108,23 +108,30 @@ public class Lg {
     private static FileOutputStream fos = null;
     private static Handler lgHandler;
     public static File targetFile;
+
+    public static boolean useLogcat = true;
+
     public static void init(Context context) {
         Lg.context = context;
-        try {
-            HandlerThread handlerThread = new HandlerThread("LG");
-            handlerThread.start();
-            lgHandler = new Handler(handlerThread.getLooper());
-            initFile(context);
-            Lg.i(TAG,"Init Process PID:%s", Process.myPid());
-        } catch (Throwable e) {
-            e.printStackTrace();
+        LogcatToFileUtil.INSTANCE.initLogFile(context);
+        LogcatToFileUtil.INSTANCE.startLogcatCapture(context);
+        if (useLogcat){
+            try {
+                HandlerThread handlerThread = new HandlerThread("LG");
+                handlerThread.start();
+                lgHandler = new Handler(handlerThread.getLooper());
+                initFile(context);
+                Lg.i(TAG,"Init Process PID:%s", Process.myPid());
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-
-                cleanExpiredLogs7DayBefore(context);
+                cleanExpiredLogs1DayBefore(context);
+                cleanLogcat1DayBefore();
             }
         }).start();
     }
@@ -169,6 +176,9 @@ public class Lg {
 
 
     public static void saveLogToFile(String tag, String logMessage) {
+        if (useLogcat){
+            return;
+        }
         if (lgHandler == null) {
             return;
         }
@@ -193,15 +203,16 @@ public class Lg {
     }
 
     // 添加清理过期日志的方法
-    private static void cleanExpiredLogs7DayBefore(Context context) {
+    private static void cleanExpiredLogs1DayBefore(Context context) {
         try {
+
             File logDir = new File(context.getExternalFilesDir(null).getParentFile(), "log");
             if (!logDir.exists() || !logDir.isDirectory()) {
                 return;
             }
 
-            // 获取一周前的时间戳（毫秒）
-            long oneWeekAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
+            // 获取一天前的时间戳（毫秒）
+            long oneWeekAgo = System.currentTimeMillis() - (1L * 24 * 60 * 60 * 1000);
 
             File[] logFiles = logDir.listFiles((dir, name) -> name.endsWith("_app_logs.txt"));
             if (logFiles == null) {
@@ -231,6 +242,47 @@ public class Lg {
                             Lg.w(TAG, "Failed to delete expired log file (by modify time): " + file.getName());
                         }
                     }
+                }
+            }
+        } catch (Throwable e) {
+            Lg.e(TAG, "Error cleaning expired logs %s", e);
+        }
+    }
+
+    private static void cleanLogcat1DayBefore() {
+        try {
+            // 1. 获取日志存储目录（适配工具类的路径逻辑）
+            // 注意：需传入 Context，建议从 Application/Activity 获取
+             File logDir = new File(LogcatToFileUtil.INSTANCE.getLogDirPath());
+            if (!logDir.exists() || !logDir.isDirectory()) {
+                return;
+            }
+
+            // 2. 计算一天前的时间戳（毫秒）
+            long oneDayAgo = System.currentTimeMillis() - (1L * 24 * 60 * 60 * 1000);
+
+            // 3. 筛选以 logcat_ 开头的日志文件
+            File[] logFiles = logDir.listFiles((dir, name) -> name.startsWith("logcat_") && name.endsWith(".txt"));
+            if (logFiles == null || logFiles.length == 0) {
+                return;
+            }
+
+            // 4. 遍历文件，删除一天前的日志
+            for (File logFile : logFiles) {
+                try {
+                String fileName = logFile.getName();
+                String timeStr = fileName.replace("logcat_", "").replace(".txt", "");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.CHINA);
+                Date fileDate = sdf.parse(timeStr);
+                if (fileDate != null && fileDate.getTime() < oneDayAgo) {
+                    boolean isDeleted = logFile.delete();
+                    if (isDeleted) {
+                        Lg.d(TAG, "Deleted expired log file by name: %s", fileName);
+                    }
+                }
+                } catch (Exception e) {
+                    // 单个文件删除失败不影响其他文件
+                    Lg.e(TAG, "Error deleting log file %s: %s", logFile.getName(), e);
                 }
             }
         } catch (Throwable e) {

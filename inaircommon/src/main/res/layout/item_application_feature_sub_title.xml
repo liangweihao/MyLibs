@@ -6,7 +6,7 @@
     android:gravity="center">
 
     <LinearLayout
-        android:layout_width="@dimen/dp_500"
+        android:layout_width="@dimen/dp_600"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="start|center_vertical"
@@ -23,6 +23,7 @@
             android:textColor="@android:color/black" />
 
         <androidx.recyclerview.widget.RecyclerView
+            android:layout_marginTop="@dimen/dp_10"
             android:id="@+id/rv_feature_item_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />

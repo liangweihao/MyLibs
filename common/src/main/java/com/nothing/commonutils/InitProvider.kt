@@ -47,6 +47,7 @@ class InitProvider : ContentProvider() {
     private val TAG = "InitProvider"
 
     override fun onCreate(): Boolean {
+
         Lg.init(context)
         Try.catchSelf {
             val applicationInfo = context!!.packageManager.getApplicationInfo(context!!.packageName, PackageManager.GET_META_DATA)
@@ -97,5 +98,6 @@ class InitProvider : ContentProvider() {
     ): Int {
         return 0
     }
+
 
 }

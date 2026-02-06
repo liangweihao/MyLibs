@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -82,6 +84,14 @@ public class DpManagerProxy {
             return (int) imagePreview;
         }
         return 1020;
+    }
+
+    public static int getConstUnityAction() {
+        Object imagePreview = getStaticFieldObject(CLASS_CHANNEL_ACTION, "UNITY_ACTION");
+        if (imagePreview != null) {
+            return (int) imagePreview;
+        }
+        return 1999;
     }
 
     public static int getConstInairSpaceWindowResize() {
@@ -317,6 +327,22 @@ public class DpManagerProxy {
         }
         return "data_type";
     }
+    public static String getConstDataKeysREQUESTACTION() {
+        return "REQUEST_ACTION";
+    }
+
+
+    public static String getConstDataKeysREQUESTFAIL() {
+        return "REQUEST_FAIL";
+    }
+
+    public static String getConstDataKeysACTIVE() {
+        return "ACTIVE";
+    }
+
+    public static String getConstUnityActive() {
+        return "UNITY_ACTIVE";
+    }
 
     public static String getConstDataKeysResolutionWidth() {
         Object imagePreview = getStaticFieldObject(
@@ -339,6 +365,66 @@ public class DpManagerProxy {
         }
         return "resolution_height";
     }
+
+    public static String getConstActionShow() {
+        return "ACTION_SHOW";
+    }
+    public static String getConstActionHide() {
+        return "ACTION_HIDE";
+    }
+
+    public static String getConstActionPDFCreate() {
+        return "pdf_create";
+    }
+    public static String getConstActionPDFDestroy() {
+        return "pdf_destroy";
+    }
+    public static String getConstActionPDFInfo() {
+        return "pdf_info";
+    }
+    public static String getConstActionPDFRequestAlloc() {
+        return "pdf_request_alloc";
+    }
+
+    public static String getConstActionPDFOpen() {
+        return "pdf_open";
+    }
+    public static String getConstActionPDFClose() {
+        return "pdf_close";
+    }
+    public static String getConstActionPDFPageDown() {
+        return "pdf_page_down";
+    }
+    public static String getConstActionPDFPageUp() {
+        return "pdf_page_up";
+    }
+
+
+
+    public static String getConstDataKeySwitchAi3D(){
+        return "switch_ai3d";
+    }
+
+    public static String getConstDataKeyOpenOrCloseAi3D(){
+        return "is_open_ai3d";
+    }
+
+    public static String getConstDataKeySwitchAi3DResult(){
+        return "switch_ai3d_result";
+    }
+
+
+
+    public static String getConstDataKeyGetAi3D(){
+        return "get_ai3d";
+    }
+
+    public static String getConstDataKeyGetAi3DResult(){
+        return "get_ai3d_result";
+    }
+
+
+
 
     @Nullable
     public static Object createChannelDataInstance() {
@@ -684,13 +770,14 @@ public class DpManagerProxy {
 
 
 
+
     public static void createImagePreviewShow(int displayId, String uniqueID) {
         try {
 
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "ACTION_SHOW");
+            bundle.putString(getConstAction(), getConstActionShow());
             bundle.putInt(getConstDisplayID(), displayId);
             bundle.putString(getConstPackageName(), uniqueID);
             setBundle(channelData, bundle);
@@ -708,7 +795,7 @@ public class DpManagerProxy {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "ACTION_HIDE");
+            bundle.putString(getConstAction(), getConstActionHide());
             bundle.putInt(getConstDisplayID(), displayId);
             bundle.putString(getConstPackageName(), uniqueID);
             setBundle(channelData, bundle);
@@ -736,8 +823,99 @@ public class DpManagerProxy {
     }
 
 
+    public static class GetAi3DResult{
+        private boolean isOpen = false;
+
+        public GetAi3DResult(boolean isOpen) {
+            this.isOpen = isOpen;
+        }
+
+        public boolean isOpen() {
+            return isOpen;
+        }
+    }
+
+    @Nullable
+    public static GetAi3DResult getGetSwitchAi3DResult( Object readChannelData,
+                                                  int displayID,
+                                                  String uniqueID) {
+        int action = getAction(readChannelData);
+        if (action == getConstImagePreview()) {
+            Bundle bundle = getBundle(readChannelData);
+            int displayOldID = bundle.getInt(getConstDisplayID(), -1);
+            String packageOldName = bundle.getString(getConstPackageName(), "");
+            if (Objects.equals(displayOldID, displayID) && Objects.equals(
+                    packageOldName,
+                    uniqueID
+            ) && bundle.getString(getConstAction(), "").equals(getConstDataKeySwitchAi3DResult())) {
+                return new GetAi3DResult(bundle.getBoolean(getConstDataKeyOpenOrCloseAi3D(), false));
+            }
+            return null;
+
+        }
+        return null;
+    }
+
+    @Nullable
+    public static GetAi3DResult getGetAi3DResult( Object readChannelData,
+                                                  int displayID,
+                                                  String uniqueID
+    ) {
+        int action = getAction(readChannelData);
+        if (action == getConstImagePreview()) {
+            Bundle bundle = getBundle(readChannelData);
+            int displayOldID = bundle.getInt(getConstDisplayID(), -1);
+            String packageOldName = bundle.getString(getConstPackageName(), "");
+            if (Objects.equals(displayOldID, displayID) && Objects.equals(packageOldName,
+                    uniqueID
+            ) && bundle.getString(getConstAction(), "").equals(getConstDataKeyGetAi3DResult())) {
+                return new GetAi3DResult(bundle.getBoolean(getConstDataKeyOpenOrCloseAi3D(),
+                        false
+                ));
+            }
+            return null;
+
+        }
+        return null;
+    }
 
 
+    public static void createSwitchAi3D(
+          boolean isOpen, int displayId,String uniqueID
+    ) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), getConstDataKeySwitchAi3D());
+            bundle.putString(getConstPackageName(), uniqueID);
+            bundle.putInt(getConstDisplayID(), displayId);
+            bundle.putBoolean(getConstDataKeyOpenOrCloseAi3D(), isOpen);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
+
+
+    public static void createGetAi3DResult(int displayId,String uniqueID
+    ) {
+        try {
+            Object channelData = createChannelDataInstance();
+            setAction(channelData, getConstImagePreview());
+            Bundle bundle = new Bundle();
+            bundle.putString(getConstAction(), getConstDataKeyGetAi3D());
+            bundle.putString(getConstPackageName(), uniqueID);
+            bundle.putInt(getConstDisplayID(), displayId);
+            setBundle(channelData, bundle);
+            writeChannel(getConstTypeImageDisplay(), channelData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, " " + e);
+        }
+    }
 
 
 
@@ -745,7 +923,13 @@ public class DpManagerProxy {
      * 针对图库的
      */
     public static void createImagePreviewOpenForIMAGE(
-            HardwareBuffer buffer, int dataType, int displayWidth, int displayHeight, int displayId
+            HardwareBuffer buffer,
+            int dataType,
+            int displayWidth,
+            int displayHeight,
+            int displayId,
+            Rect imageContentArea
+
     ) {
         try {
             Object channelData = createChannelDataInstance();
@@ -758,6 +942,7 @@ public class DpManagerProxy {
             bundle.putInt(getConstDataKeysDATATYPE(), dataType);
             bundle.putInt(getConstDataKeysResolutionWidth(), displayWidth);
             bundle.putInt(getConstDataKeysResolutionHeight(), displayHeight);
+            bundle.putParcelable("IMAGE_CONTENT_AREA", imageContentArea);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -787,7 +972,6 @@ public class DpManagerProxy {
             bundle.putInt(getConstDisplayID(), displayId);
             bundle.putParcelable("WINDOW_CONTENT_AREA", windowContent);
             bundle.putString(getConstPackageName(), "INAIRSPACE");
-            bundle.getParcelable("WINDOW_CONTENT_AREA");
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
         } catch (Exception e) {
@@ -979,6 +1163,86 @@ public class DpManagerProxy {
         return null;
     }
 
+
+    public static class RequestFailMessage {
+        public String requestAction;
+        public int displayID;
+        public String packageName;
+
+        public RequestFailMessage(String requestAction, int displayID, String packageName) {
+            this.requestAction = requestAction;
+            this.displayID = displayID;
+            this.packageName = packageName;
+        }
+    }
+
+    @Nullable
+    public static RequestFailMessage getRequestFailMessage(Bundle bundle) {
+        if (bundle == null){
+            return null;
+        }
+        if (!bundle.getString(getConstAction(),"").equals(getConstDataKeysREQUESTFAIL())) {
+            return null;
+        }
+        String requestAction = bundle.getString(getConstDataKeysREQUESTACTION(), "");
+        int displayID = bundle.getInt(getConstDisplayID(), -1);
+        String packageName = bundle.getString(getConstPackageName(), "");
+        if (!TextUtils.isEmpty(requestAction)) {
+            return new RequestFailMessage(requestAction, displayID, packageName);
+        }
+        return null;
+    }
+    /**
+     *    ChannelData channelData = ChannelData.createInstance();
+     *     channelData.setAction(ChannelAction.UNITY_ACTION); // UNITY_ACTION 1999
+     *     Bundle bundle = new Bundle();
+     *     bundle.putString(ChannelDataKeys.ACTION, "UNITY_ACTIVE");
+     *     bundle.putString("ACTIVE", true/false); // true 代表可以操作 Unity 虚拟屏 false 代表不
+     *
+     * */
+    public static class UnityActiveMessage {
+        public boolean isActive;
+
+        public UnityActiveMessage(boolean isActive) {
+            this.isActive = isActive;
+        }
+    }
+
+    @Nullable
+    public static UnityActiveMessage getUnityActiveMessage(Bundle bundle) {
+        if (bundle == null){
+            return null;
+        }
+        if (!bundle.getString(getConstAction(),"").equals(getConstUnityActive())) {
+            return null;
+        }
+        boolean active = bundle.getBoolean(getConstDataKeysACTIVE(),false);
+        return new UnityActiveMessage(active);
+    }
+
+    public static String bundle2String(Bundle bundle) {
+        if (bundle == null || bundle.isEmpty()) {
+            return "Bundle is null or empty";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("Bundle{");
+        // 获取Bundle所有键名集合
+        Set<String> keySet = bundle.keySet();
+        for (String key : keySet) {
+            // 通用get方法获取值（适配所有类型）
+            Object value = bundle.get(key);
+            // 拼接键值对，特殊类型可单独格式化（如List/数组）
+            sb.append(key).append("=").append(value).append(", ");
+        }
+        // 移除最后一个多余的逗号和空格
+        if (sb.length() > 7) { // 大于"Bundle{"的长度
+            sb.delete(sb.length() - 2, sb.length());
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+
     @Nullable
     public static Bundle hasImageAllocBundle(
             Object readChannelData,
@@ -986,22 +1250,21 @@ public class DpManagerProxy {
             String uniqueID
     ) {
         int action = getAction(readChannelData);
-        if (action == getConstImagePreview()) {
+        if (action == getConstImagePreview() || action == getConstUnityAction()) {
             Bundle bundle = getBundle(readChannelData);
             int displayOldID = bundle.getInt(getConstDisplayID(), -1);
             String packageOldName = bundle.getString(getConstPackageName(), "");
 //            Lg.i(TAG, "hasImageAllocBundle DisplayID:%d UniqueID:%s", displayOldID, packageOldName);
-            invokeStaticMethod(
-                    LG_Package,
-                    "i",
-                    new Class[]{String.class, String.class, Object[].class},
-                    new Object[]{TAG, "hasImageAllocBundle DisplayID:%d UniqueID:%s", new Object[]{displayOldID,packageOldName}}
-            );
-
             if (Objects.equals(displayOldID, displayID) && Objects.equals(
                     packageOldName,
                     uniqueID
             )) {
+                invokeStaticMethod(
+                        LG_Package,
+                        "i",
+                        new Class[]{String.class, String.class, Object[].class},
+                        new Object[]{TAG, "Receive Bundle DisplayID:%d UniqueID:%s \n%s", new Object[]{displayOldID,packageOldName,bundle2String(bundle)}}
+                );
                 return bundle.getString(getConstAction(), "")
                         .equals(getConstActionImageAlloc()) ? bundle : null;
             }
@@ -1075,12 +1338,15 @@ public class DpManagerProxy {
     }
 
 
+
+
+
     public static void createPDFCreate(int displayID) {
         try {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_create");
+            bundle.putString(getConstAction(), getConstActionPDFCreate());
             bundle.putInt(getConstDisplayID(), displayID);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
@@ -1096,7 +1362,7 @@ public class DpManagerProxy {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_destroy");
+            bundle.putString(getConstAction(), getConstActionPDFDestroy());
             bundle.putInt(getConstDisplayID(), displayID);
             setBundle(channelData, bundle);
             writeChannel(getConstTypeImageDisplay(), channelData);
@@ -1111,7 +1377,7 @@ public class DpManagerProxy {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_info");
+            bundle.putString(getConstAction(), getConstActionPDFInfo());
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("count", pageCount);
             bundle.putInt("pageSelect", pageSelect);
@@ -1131,7 +1397,7 @@ public class DpManagerProxy {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_request_alloc");
+            bundle.putString(getConstAction(), getConstActionPDFRequestAlloc());
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt(getConstDataKeysResolutionWidth(), hardwareWidth);
             bundle.putInt(getConstDataKeysResolutionHeight(), hardwareHeight);
@@ -1153,7 +1419,7 @@ public class DpManagerProxy {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_open");
+            bundle.putString(getConstAction(), getConstActionPDFOpen());
             bundle.putInt(getConstDataKeysDATATYPE(), dateType);
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt(getConstDataKeysResolutionWidth(), displayWidth);
@@ -1173,7 +1439,7 @@ public class DpManagerProxy {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_close");
+            bundle.putString(getConstAction(), getConstActionPDFClose());
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("index", harwareIndex);
             bundle.putInt("page", page);
@@ -1185,12 +1451,13 @@ public class DpManagerProxy {
         }
     }
 
+
     public static void createPageDownPDF(int displayID, int currentPage) {
         try {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_page_down");
+            bundle.putString(getConstAction(), getConstActionPDFPageDown());
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("page", currentPage);
             setBundle(channelData, bundle);
@@ -1201,12 +1468,14 @@ public class DpManagerProxy {
         }
     }
 
+
+
     public static void createPageUpPDF(int displayID, int currentPage) {
         try {
             Object channelData = createChannelDataInstance();
             setAction(channelData, getConstImagePreview());
             Bundle bundle = new Bundle();
-            bundle.putString(getConstAction(), "pdf_page_up");
+            bundle.putString(getConstAction(), getConstActionPDFPageUp());
             bundle.putInt(getConstDisplayID(), displayID);
             bundle.putInt("page", currentPage);
             setBundle(channelData, bundle);
