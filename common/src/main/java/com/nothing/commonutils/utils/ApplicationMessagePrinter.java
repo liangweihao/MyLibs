@@ -220,34 +220,32 @@ public class ApplicationMessagePrinter implements Printer {
         String viewId;
         if (view.getId() != View.NO_ID) {
             try {
-                viewId = "id=" + view.getResources().getResourceName(view.getId());
+                viewId = " id=" + view.getResources().getResourceName(view.getId());
             } catch (Exception e) {
-                viewId = "id=" + view.getId() + "（无法获取资源名）";
+                viewId = " id=" + view.getId() + "（无法获取资源名）";
             }
         } else {
-            viewId = "id=NO_ID";
+            viewId = " id=NO_ID";
         }
 
         // 2. 文本内容（TextView 子类）
         String viewText;
         if (view instanceof TextView) {
-            viewText = "text=" + ((TextView) view).getText();
+            viewText = " text=" + ((TextView) view).getText();
         } else {
-            viewText = "非文本View";
+            viewText = "";
         }
 
         // 3. 其他关键信息
         String viewClass = " class=" + view.getClass().getSimpleName();
         String viewPosition = " (Left:" + view.getLeft() + ", Top:" + view.getTop() + ", Right:" + view.getRight() + ", Bottom:" + view.getBottom() + ")";
 
-        String  text = view instanceof TextView? "text="+((TextView) view).getText().toString() : "";
         // 拼接日志
         StringBuilder log = new StringBuilder();
         log.append(viewClass)
                 .append(viewId)
                 .append(viewText)
-                .append(viewPosition)
-                .append(text);
+                .append(viewPosition);
 
         Lg.i(TAG, log.toString());
     }
