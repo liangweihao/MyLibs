@@ -109,13 +109,12 @@ public class Lg {
     private static Handler lgHandler;
     public static File targetFile;
 
-    public static boolean useLogcat = true;
+    public static boolean useLogcat = false;
 
     public static void init(Context context) {
         Lg.context = context;
-        LogcatToFileUtil.INSTANCE.initLogFile(context);
-        LogcatToFileUtil.INSTANCE.startLogcatCapture(context);
-        if (useLogcat){
+
+        if (!useLogcat){
             try {
                 HandlerThread handlerThread = new HandlerThread("LG");
                 handlerThread.start();
@@ -125,6 +124,9 @@ public class Lg {
             } catch (Throwable e) {
                 e.printStackTrace();
             }
+        }else {
+            LogcatToFileUtil.INSTANCE.initLogFile(context);
+            LogcatToFileUtil.INSTANCE.startLogcatCapture(context);
         }
 
         new Thread(new Runnable() {
